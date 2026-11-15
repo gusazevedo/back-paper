@@ -19,7 +19,9 @@ Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agen
 ## Development
 
 - App (`app/`): `npm run android`, `npm start` (Metro), `npm run lint`, `npm run typecheck`, `npm test`.
-- Backend (repo root): `npm run db:start` (needs Docker), `npm run db:reset` (reapplies `supabase/migrations` + `supabase/seed.sql`).
+- Backend (repo root): `npm run db:start` (needs Docker), `npm run db:reset` (reapplies `supabase/migrations` + `supabase/seed.sql`), `npm run db:test` (pgTAP tests in `supabase/tests`).
+- Every migration that adds a table or policy gets pgTAP coverage in `supabase/tests` (RLS included).
+- App config lives in `app/src/config/env.ts` (public values only: Supabase URL, anon key, Google Web client ID). Defaults point at the local stack (`10.0.2.2:54321` from the emulator). Google provider secrets for the local stack go in `supabase/.env` (see `supabase/.env.example`).
 - New migration: `npx supabase migration new <name> </dev/null` (the command reads SQL from stdin and hangs without the redirect).
 - UI strings live in `app/src/i18n/en.ts` and are read with `t('key')`; never hardcode strings in screens.
 - Android 17 emulator: a debug build needs the "nearby devices / local network" permission to reach Metro. Tap **Allow** on first launch.

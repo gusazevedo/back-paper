@@ -18,6 +18,20 @@ export const en = {
   },
   profile: {
     title: 'Profile',
+    logOut: 'Log out',
+  },
+  login: {
+    title: 'BackPaper',
+    tagline:
+      'A shared gallery of phone wallpapers to browse, like, save and download.',
+    continueWithGoogle: 'Continue with Google',
+    signingIn: 'Signing in…',
+    signedInOnly: 'The feed is only visible to signed-in users.',
+    errors: {
+      notConfigured: 'Google sign-in is not configured in this build.',
+      playServices: 'Google Play services are required to sign in.',
+      failed: "Couldn't sign in. Please try again.",
+    },
   },
 };
 
