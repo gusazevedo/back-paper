@@ -79,7 +79,7 @@ Lista fixa (seed no banco):
 `AI, Dark, Light, Minimalist, Nature, Abstract, Anime/Illustration, Cityscape, Space, AMOLED, Gradient, Photography`.
 
 - R-CAT-1: Cada wallpaper tem **de 1 a 5** categorias.
-- R-CAT-2: O filtro do feed seleciona **uma categoria por vez** (ou "All").
+- R-CAT-2: O filtro do feed aceita **várias categorias ao mesmo tempo** (seleção múltipla, até as 12). Nenhuma selecionada = todas. Semântica **OU**: aparece o wallpaper que tiver **pelo menos uma** das categorias selecionadas.
 
 ### 4.3 Feed
 - R-FEED-1: Grade de 2 colunas com miniaturas; **só a imagem**, sem contagens.
@@ -110,7 +110,7 @@ Ações para **wallpaper próprio**:
 - Delete (com confirmação).
 - Sem Like, Save ou Report.
 
-- R-DET-1: Tocar num chip de categoria fecha o detalhe e aplica esse filtro no feed.
+- R-DET-1: Tocar num chip de categoria fecha o detalhe e aplica no feed um filtro **somente com essa categoria** (substitui a seleção anterior).
 
 ### 4.5 Curtidas
 - R-LIKE-1: Um usuário curte um wallpaper no máximo uma vez; pode descurtir.
@@ -276,7 +276,7 @@ Toda exclusão de wallpaper (pelo autor, por denúncias ou por cascata da exclus
 | publish_events, r2_deletion_queue | — (service role) | — | — | — |
 
 ### 5.3 RPCs (funções Postgres)
-- `feed(category text null, sort text, cursor jsonb null, limit int = 20)`: keyset pagination. Retorna wallpapers com autor e flag `liked_by_me`. Exclui os denunciados pelo usuário.
+- `feed(categories text[] null, sort text, cursor jsonb null, limit int = 20)`: `categories` nulo ou vazio = todas; caso contrário, wallpapers com pelo menos uma das categorias (`exists` em `wallpaper_categories`, sem duplicar linhas). Keyset pagination. Retorna wallpapers com autor e flag `liked_by_me`. Exclui os denunciados pelo usuário.
 - `user_wallpapers(user_id uuid, cursor, limit)`: grade de perfil (próprio ou público).
 - `update_wallpaper(id uuid, title text, categories text[])`: valida autor, `now() - created_at < interval '24 hours'` e 1–5 categorias.
 - `folder_contents(folder_id, cursor, limit)`.
@@ -321,7 +321,7 @@ Toda exclusão de wallpaper (pelo autor, por denúncias ou por cascata da exclus
 | Tela | Conteúdo / comportamento |
 |---|---|
 | **Login** | Logo, botão "Continue with Google". |
-| **Feed** (tab) | Chips de categoria (All + 12), seletor Recent / Most liked, grade 2 colunas, rolagem infinita, pull-to-refresh, estados vazio/erro/loading. |
+| **Feed** (tab) | Botão "Categories" que abre a seleção múltipla, com contador e chips removíveis das selecionadas ("All categories" quando nenhuma), seletor Recent / Most liked, grade 2 colunas, rolagem infinita, pull-to-refresh, estados vazio/erro/loading. |
 | **Wallpaper detail** | Ver 4.4. |
 | **Save sheet** | Ver R-FOLD-7. |
 | **New folder** | Campo nome com validação (1–40, único). Usado a partir do sheet e do perfil. |
