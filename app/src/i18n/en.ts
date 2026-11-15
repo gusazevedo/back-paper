@@ -1,14 +1,20 @@
 export const en = {
+  common: {
+    cancel: 'Cancel',
+    close: 'Close',
+    back: 'Back',
+    dismiss: 'Dismiss',
+  },
   tabs: {
     feed: 'Feed',
-    publish: 'Publish',
     profile: 'Profile',
   },
   feed: {
-    title: 'Feed',
+    title: 'BackPaper',
   },
   publish: {
     title: 'Publish',
+    open: 'Publish a wallpaper',
   },
   profile: {
     title: 'Profile',
