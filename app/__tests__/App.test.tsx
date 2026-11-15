@@ -1,6 +1,18 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../src/App';
 
+jest.mock('../src/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getSession: async () => ({ data: { session: { access_token: 'jwt' } } }),
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe() {} } },
+      }),
+    },
+  },
+}));
+jest.mock('@react-native-google-signin/google-signin', () => ({}));
+
 describe('App navigation', () => {
   it('switches between Feed and Profile from the floating nav', async () => {
     await render(<App />);
