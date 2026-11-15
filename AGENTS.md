@@ -15,3 +15,11 @@ Default vocabulary: needs-triage, needs-info, ready-for-agent, ready-for-human, 
 ### Domain docs
 
 Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## Development
+
+- App (`app/`): `npm run android`, `npm start` (Metro), `npm run lint`, `npm run typecheck`, `npm test`.
+- Backend (repo root): `npm run db:start` (needs Docker), `npm run db:reset` (reapplies `supabase/migrations` + `supabase/seed.sql`).
+- New migration: `npx supabase migration new <name> </dev/null` (the command reads SQL from stdin and hangs without the redirect).
+- UI strings live in `app/src/i18n/en.ts` and are read with `t('key')`; never hardcode strings in screens.
+- Android 17 emulator: a debug build needs the "nearby devices / local network" permission to reach Metro. Tap **Allow** on first launch.
