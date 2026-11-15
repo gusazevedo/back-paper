@@ -41,7 +41,7 @@
 | Repositório | Monorepo: `app/` (React Native), `supabase/` (migrations + functions via Supabase CLI), `docs/` (specs) |
 
 ### Bibliotecas do app
-- Navegação: **React Navigation** — bottom tabs (Feed · Publish · Profile) + stacks.
+- Navegação: **React Navigation** — navegação flutuante (pílula com Feed · Profile + botão "+" que abre Publish em tela cheia) + stacks.
 - Dados/cache: **TanStack Query** + **supabase-js**.
 - Login: **@react-native-google-signin/google-signin** → `supabase.auth.signInWithIdToken({ provider: 'google', token })`.
 - Seleção de imagem: **react-native-image-picker** (galeria) e **@react-native-documents/picker** (arquivo).

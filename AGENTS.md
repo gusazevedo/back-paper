@@ -23,3 +23,9 @@ Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agen
 - New migration: `npx supabase migration new <name> </dev/null` (the command reads SQL from stdin and hangs without the redirect).
 - UI strings live in `app/src/i18n/en.ts` and are read with `t('key')`; never hardcode strings in screens.
 - Android 17 emulator: a debug build needs the "nearby devices / local network" permission to reach Metro. Tap **Allow** on first launch.
+
+## Design
+
+- Source of truth for visuals: the claude-design artifact "BackPapers" (https://claude.ai/artifact/7VAk8wSbbg9bD9Xo9JViYv). Each screen is an artboard (`project/*.dc.html`); read the ones for the screen you are building.
+- Translate artboards into React Native; never copy HTML. Use the tokens in `app/src/theme` (colors, typography, radii, spacing) and the base components in `app/src/components` instead of literal values.
+- Navigation follows the design: floating pill (Feed, Profile) + "+" button that opens Publish as a full-screen modal.
