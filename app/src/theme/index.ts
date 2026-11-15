@@ -17,6 +17,10 @@ export const colors = {
   divider: '#E8E8E3',
   danger: '#B3261E',
   dangerSoft: '#D43D22',
+  dangerSurface: '#FBEEEA',
+  dangerText: '#8C1D18',
+  hairline: '#E2E2DD',
+  track: '#DCDCD6',
   overlay: 'rgba(22, 22, 20, 0.4)',
   shadow: '#161614',
 };
@@ -38,6 +42,9 @@ export const radii = {
   card: 18,
   nav: 22,
   sheet: 24,
+  preview: 20,
+  panel: 22,
+  notice: 12,
   pill: 999,
 };
 

@@ -7,6 +7,7 @@ import {
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import App from '../src/App';
 import { supabase } from '../src/lib/supabase';
+import type { SupabaseMock } from '../testing/mockSupabase';
 
 jest.mock('../src/config/env', () => ({
   env: {
@@ -32,47 +33,16 @@ jest.mock('@react-native-google-signin/google-signin', () => ({
   },
 }));
 
-type MockListener = (event: string, session: unknown) => void;
+jest.mock('../src/lib/supabase', () => ({
+  supabase: require('../testing/mockSupabase').createSupabaseMock(),
+}));
 
-jest.mock('../src/lib/supabase', () => {
-  const listeners: MockListener[] = [];
-  let session: unknown = null;
-  const emit = (next: unknown) => {
-    session = next;
-    listeners.forEach(l => l('change', next));
-  };
-  return {
-    supabase: {
-      auth: {
-        getSession: jest.fn(async () => ({ data: { session } })),
-        onAuthStateChange: jest.fn((l: MockListener) => {
-          listeners.push(l);
-          return { data: { subscription: { unsubscribe: jest.fn() } } };
-        }),
-        signInWithIdToken: jest.fn(async () => {
-          emit({ access_token: 'jwt', user: { id: 'u1' } });
-          return { error: null };
-        }),
-        signOut: jest.fn(async () => {
-          emit(null);
-          return { error: null };
-        }),
-        __setSession: (s: unknown) => {
-          session = s;
-        },
-      },
-    },
-  };
-});
-
-const auth = supabase.auth as unknown as typeof supabase.auth & {
-  __setSession: (s: unknown) => void;
-};
+const mock = supabase as unknown as SupabaseMock;
 
 describe('authentication gate', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    auth.__setSession(null);
+    mock.__setSession(null);
   });
 
   it('shows only the login screen without a session', async () => {
@@ -84,7 +54,7 @@ describe('authentication gate', () => {
   });
 
   it('opens the tabs directly when a session is persisted', async () => {
-    auth.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
+    mock.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
     await render(<App />);
     expect(await screen.findByRole('tab', { name: 'Feed' })).toBeTruthy();
   });
@@ -136,10 +106,15 @@ describe('authentication gate', () => {
   });
 
   it('log out clears Google and Supabase and returns to login', async () => {
-    auth.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
+    mock.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
     await render(<App />);
     await fireEvent.press(await screen.findByRole('tab', { name: 'Profile' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Log out' }));
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Settings' }),
+    );
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Log out' }),
+    );
     await waitFor(() => expect(GoogleSignin.signOut).toHaveBeenCalled());
     expect(supabase.auth.signOut).toHaveBeenCalled();
     expect(

@@ -22,12 +22,21 @@ export function setLocale(locale: Locale): void {
   currentLocale = locale;
 }
 
-export function t(key: TranslationKey): string {
+/** Looks up a string by key; `{name}` placeholders are filled from `params`. */
+export function t(
+  key: TranslationKey,
+  params?: Record<string, string | number>,
+): string {
   const value = key
     .split('.')
     .reduce<unknown>(
       (node, part) => (node as Record<string, unknown> | undefined)?.[part],
       dictionaries[currentLocale],
     );
-  return typeof value === 'string' ? value : key;
+  const text = typeof value === 'string' ? value : key;
+  return params
+    ? text.replace(/\{(\w+)\}/g, (match, name) =>
+        name in params ? String(params[name]) : match,
+      )
+    : text;
 }

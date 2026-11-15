@@ -16,7 +16,12 @@ export type IconName =
   | 'lock'
   | 'folder'
   | 'edit'
-  | 'trash';
+  | 'trash'
+  | 'image'
+  | 'check'
+  | 'replace'
+  | 'alert'
+  | 'clock';
 
 type Props = {
   name: IconName;
@@ -113,5 +118,31 @@ function renderPaths(
       return <Path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" {...s} />;
     case 'trash':
       return <Path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" {...s} />;
+    case 'image':
+      return (
+        <>
+          <Rect x={5} y={2.5} width={14} height={19} rx={2.5} {...s} />
+          <Circle cx={9.5} cy={8} r={1.5} {...s} />
+          <Path d="M5 17l4.5-4.5 3.5 3.5 2-2 4 4" {...s} />
+        </>
+      );
+    case 'check':
+      return <Path d="M5 12.5l4.5 4.5L19 7.5" {...s} />;
+    case 'replace':
+      return <Path d="M4 8h14l-3-3M20 16H6l3 3" {...s} />;
+    case 'alert':
+      return (
+        <>
+          <Circle cx={12} cy={12} r={9} {...s} />
+          <Path d="M12 7.5v5.5M12 16.5v.01" {...s} />
+        </>
+      );
+    case 'clock':
+      return (
+        <>
+          <Circle cx={12} cy={12} r={9} {...s} />
+          <Path d="M12 7v5l3 2" {...s} />
+        </>
+      );
   }
 }

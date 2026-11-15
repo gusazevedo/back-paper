@@ -120,6 +120,12 @@ enabled = true
 file_size_limit = "50MiB"
 
 # Uncomment to configure local storage buckets
+# Stand-in for the Cloudflare R2 bucket during local development (same S3 protocol).
+[storage.buckets.wallpapers]
+public = true
+file_size_limit = "15MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp"]
+
 # [storage.buckets.images]
 # public = false
 # file_size_limit = "50MiB"

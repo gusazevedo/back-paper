@@ -1,16 +1,12 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import App from '../src/App';
 
-jest.mock('../src/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: async () => ({ data: { session: { access_token: 'jwt' } } }),
-      onAuthStateChange: () => ({
-        data: { subscription: { unsubscribe() {} } },
-      }),
-    },
-  },
-}));
+jest.mock('../src/lib/supabase', () => {
+  const mock = require('../testing/mockSupabase').createSupabaseMock();
+  mock.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
+  mock.__state.tables.profiles = [{ id: 'u1', display_name: 'Maya', avatar_url: null }];
+  return { supabase: mock };
+});
 jest.mock('@react-native-google-signin/google-signin', () => ({}));
 
 describe('App navigation', () => {
