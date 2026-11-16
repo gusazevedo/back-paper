@@ -1,5 +1,5 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -20,6 +20,8 @@ import { Icon } from '../components/icons/Icon';
 import { useCategories } from '../features/categories/useCategories';
 import { useDownload } from '../features/download/useDownload';
 import { showOnlyCategory } from '../features/feed/filter';
+import { useWallpaperFolders } from '../features/folders/queries';
+import { SaveSheet } from '../features/folders/SaveSheet';
 import {
   EDIT_WINDOW_MS,
   useToggleLike,
@@ -125,7 +127,7 @@ export function DetailScreen({ navigation, route }: Props) {
       {w ? (
         <Info
           wallpaper={w}
-          mine={w.author_id === me}
+          me={me ?? ''}
           onToggleLike={() => like.mutate(!w.liked_by_me)}
           onPickCategory={slug => {
             showOnlyCategory(slug);
@@ -164,16 +166,20 @@ export function DetailScreen({ navigation, route }: Props) {
 
 function Info({
   wallpaper: w,
-  mine,
+  me,
   onToggleLike,
   onPickCategory,
 }: {
   wallpaper: WallpaperDetail;
-  mine: boolean;
+  me: string;
   onToggleLike: () => void;
   onPickCategory: (slug: string) => void;
 }) {
+  const mine = w.author_id === me;
   const categories = useCategories();
+  const [saveOpen, setSaveOpen] = useState(false);
+  const folders = useWallpaperFolders(w.id, !mine);
+  const saved = (folders.data?.length ?? 0) > 0;
   // Chips follow the fixed category order, not the order they were picked in.
   const chips = useMemo(() => {
     const slugs = new Set(w.wallpaper_categories.map(c => c.category_slug));
@@ -266,8 +272,16 @@ function Info({
             />
             <Button
               variant="secondary"
-              label={t('detail.save')}
-              leading={<Icon name="bookmark" size={20} />}
+              label={saved ? t('detail.saved') : t('detail.save')}
+              selected={saved}
+              onPress={() => setSaveOpen(true)}
+              leading={
+                <Icon
+                  name="bookmark"
+                  size={20}
+                  fill={saved ? colors.text : 'none'}
+                />
+              }
             />
           </>
         )}
@@ -310,6 +324,14 @@ function Info({
           />
         ) : null}
       </View>
+      {mine ? null : (
+        <SaveSheet
+          wallpaperId={w.id}
+          userId={me}
+          visible={saveOpen}
+          onDismiss={() => setSaveOpen(false)}
+        />
+      )}
     </>
   );
 }

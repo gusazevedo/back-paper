@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
 import { DetailScreen } from '../screens/DetailScreen';
+import { FolderScreen } from '../screens/FolderScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PublishScreen } from '../screens/PublishScreen';
 import { colors } from '../theme';
@@ -14,6 +15,8 @@ export type RootStackParamList = {
   Publish: undefined;
   /** `thumbKey` lets the screen show the thumbnail before the wallpaper loads. */
   Detail: { id: string; thumbKey?: string };
+  /** `name` shows in the header before the folder list loads. */
+  Folder: { id: string; name?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -48,6 +51,7 @@ export function RootStack() {
             component={DetailScreen}
             options={{ animation: 'fade_from_bottom', gestureEnabled: false }}
           />
+          <Stack.Screen name="Folder" component={FolderScreen} />
         </>
       ) : (
         <Stack.Screen

@@ -19,4 +19,10 @@ export const queryKeys = {
   userWallpaperCount: (userId: string) =>
     ['user-wallpaper-count', userId] as const,
   publishQuota: (userId: string) => ['publish-quota', userId] as const,
+  /** Prefix of every folder query: the list, each folder's grid and memberships. */
+  folders: ['folders'] as const,
+  folderList: ['folders', 'list'] as const,
+  folderItems: (folderId: string) => ['folders', 'items', folderId] as const,
+  wallpaperFolders: (wallpaperId: string) =>
+    ['folders', 'of', wallpaperId] as const,
 };
