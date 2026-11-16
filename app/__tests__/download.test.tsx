@@ -75,7 +75,7 @@ beforeEach(() => {
 });
 
 describe('saveToGallery', () => {
-  it('saves the original, not the thumbnail, to the BackPaper album', async () => {
+  it('saves the original, not the thumbnail, to the BackPapers album', async () => {
     const flush = nextDownload();
     await saveToGallery('w1', 'w/w1/original.png');
     expect(config).toHaveBeenCalledWith({
@@ -88,7 +88,7 @@ describe('saveToGallery', () => {
     );
     expect(saveAsset).toHaveBeenCalledWith(
       'file:///data/cache/backpaper-w1.png',
-      { type: 'photo', album: 'BackPaper' },
+      { type: 'photo', album: 'BackPapers' },
     );
     expect(flush).toHaveBeenCalled();
   });
@@ -141,7 +141,7 @@ describe('Download button', () => {
       await screen.findByRole('button', { name: 'Downloaded' }),
     ).toBeTruthy();
     expect(ToastAndroid.show).toHaveBeenCalledWith(
-      'Saved to the BackPaper album',
+      'Saved to the BackPapers album',
       ToastAndroid.SHORT,
     );
   });

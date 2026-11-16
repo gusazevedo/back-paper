@@ -1,4 +1,4 @@
-# BackPaper
+# BackPapers
 
 Android wallpaper-sharing app (React Native CLI, no Expo) backed by Supabase + Cloudflare R2. Product spec: `docs/SPEC.md`.
 

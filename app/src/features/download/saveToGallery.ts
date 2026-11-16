@@ -3,7 +3,7 @@ import { PermissionsAndroid, Platform } from 'react-native';
 import ReactNativeBlobUtil from 'react-native-blob-util';
 import { publicUrl } from '../../lib/storage';
 
-export const ALBUM = 'BackPaper';
+export const ALBUM = 'BackPapers';
 
 export class DownloadError extends Error {
   constructor(readonly reason: 'permission' | 'failed', cause?: unknown) {
@@ -27,7 +27,7 @@ async function ensurePermission(): Promise<void> {
 
 /**
  * R-DL-1: downloads the original file (not the thumbnail) and adds it to the
- * "BackPaper" album: DCIM/BackPaper on Android 10+, Pictures/BackPaper before.
+ * "BackPapers" album: DCIM/BackPapers on Android 10+, Pictures/BackPapers before.
  */
 export async function saveToGallery(
   wallpaperId: string,
