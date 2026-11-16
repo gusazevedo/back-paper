@@ -8,6 +8,7 @@ export const queryClient = new QueryClient({
 
 export const queryKeys = {
   categories: ['categories'] as const,
+  feed: ['feed'] as const,
   profile: (userId: string) => ['profile', userId] as const,
   userWallpapers: (userId: string) => ['user-wallpapers', userId] as const,
   userWallpaperCount: (userId: string) =>

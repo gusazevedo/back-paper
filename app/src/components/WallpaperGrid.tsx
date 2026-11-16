@@ -1,6 +1,7 @@
 import { FlashList } from '@shopify/flash-list';
 import { ReactElement } from 'react';
-import { Image, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { publicUrl } from '../lib/storage';
 import { colors, radii, spacing } from '../theme';
 
@@ -12,6 +13,7 @@ type Props = {
   onEndReached?: () => void;
   header?: ReactElement;
   empty?: ReactElement;
+  footer?: ReactElement | null;
   bottomInset?: number;
   refreshing?: boolean;
   onRefresh?: () => void;
@@ -19,13 +21,14 @@ type Props = {
 
 const GAP = spacing.sm;
 
-/** Two-column grid of thumbnails (45:64 tiles), shared by profile and feed screens. */
+/** Two-column grid of cached thumbnails (45:64 tiles), image only, shared by profile and feed screens. */
 export function WallpaperGrid({
   items,
   onPressItem,
   onEndReached,
   header,
   empty,
+  footer,
   bottomInset = 0,
   refreshing,
   onRefresh,
@@ -37,6 +40,7 @@ export function WallpaperGrid({
       keyExtractor={w => w.id}
       ListHeaderComponent={header}
       ListEmptyComponent={empty}
+      ListFooterComponent={footer}
       onEndReached={onEndReached}
       onEndReachedThreshold={0.5}
       refreshing={refreshing}
@@ -53,10 +57,11 @@ export function WallpaperGrid({
             onPress={() => onPressItem?.(item.id)}
             style={styles.tile}
           >
-            <Image
+            {/* Thumb keys are immutable (w/{id}/thumb.webp), so FastImage's default immutable cache fits. */}
+            <FastImage
               source={{ uri: publicUrl(item.thumb_key) }}
               style={styles.image}
-              resizeMode="cover"
+              objectFit="cover"
             />
           </Pressable>
         </View>
