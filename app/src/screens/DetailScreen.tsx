@@ -18,6 +18,7 @@ import { Chip } from '../components/Chip';
 import { IconButton } from '../components/IconButton';
 import { Icon } from '../components/icons/Icon';
 import { useCategories } from '../features/categories/useCategories';
+import { useDownload } from '../features/download/useDownload';
 import { showOnlyCategory } from '../features/feed/filter';
 import {
   EDIT_WINDOW_MS,
@@ -180,6 +181,10 @@ function Info({
   }, [categories.data, w.wallpaper_categories]);
   const author = w.author?.display_name ?? '';
   const likes = formatCount(w.like_count);
+  const { status: download, download: startDownload } = useDownload(
+    w.id,
+    w.original_key,
+  );
   const canEdit =
     mine && Date.now() - Date.parse(w.created_at) < EDIT_WINDOW_MS;
 
@@ -268,9 +273,25 @@ function Info({
         )}
         <View style={styles.grow}>
           <Button
-            label={t('detail.download')}
+            label={
+              download === 'downloading'
+                ? t('detail.downloading')
+                : download === 'done'
+                ? t('detail.downloadedLabel')
+                : t('detail.download')
+            }
+            // Ignore taps while saving instead of greying the button out.
+            onPress={download === 'downloading' ? undefined : startDownload}
             leading={
-              <Icon name="download" size={20} color={colors.textOnDark} />
+              download === 'downloading' ? (
+                <ActivityIndicator size="small" color={colors.textOnDark} />
+              ) : (
+                <Icon
+                  name={download === 'done' ? 'check' : 'download'}
+                  size={20}
+                  color={colors.textOnDark}
+                />
+              )
             }
           />
         </View>

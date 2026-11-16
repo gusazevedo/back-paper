@@ -31,11 +31,28 @@ jest.mock('react-native-blob-util', () => {
     };
     return result;
   });
+  // Downloads to a file: config({ path }).fetch() resolves with path(), info() and flush().
+  const config = jest.fn(({ path }) => ({
+    fetch: jest.fn(async () => ({
+      path: () => path,
+      info: () => ({ status: 200 }),
+      flush: jest.fn(),
+    })),
+  }));
   return {
     __esModule: true,
-    default: { fetch, wrap: p => `RNFetchBlob-file://${p}` },
+    default: {
+      fetch,
+      config,
+      wrap: p => `RNFetchBlob-file://${p}`,
+      fs: { dirs: { CacheDir: '/data/cache' } },
+    },
   };
 });
+
+jest.mock('@react-native-camera-roll/camera-roll', () => ({
+  CameraRoll: { saveAsset: jest.fn(async () => ({})) },
+}));
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest'),
