@@ -2,7 +2,15 @@ import { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, typography } from '../theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'dangerSoft';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'danger'
+  | 'dangerSoft'
+  /** Outlined with red text: Delete next to other outlined actions. */
+  | 'dangerOutline'
+  /** Text-only, 44 px tall: Cancel and other low-emphasis actions. */
+  | 'ghost';
 
 type Props = {
   label: string;
@@ -13,6 +21,10 @@ type Props = {
   size?: 'md' | 'lg';
   leading?: ReactNode;
   testID?: string;
+  /** Spoken label when the visible one is not enough (e.g. a bare like count). */
+  accessibilityLabel?: string;
+  /** Toggle buttons (Like) report their on state to screen readers. */
+  selected?: boolean;
 };
 
 const palette: Record<
@@ -23,6 +35,12 @@ const palette: Record<
   secondary: { bg: colors.surface, fg: colors.text, border: colors.border },
   danger: { bg: colors.danger, fg: colors.textOnDark },
   dangerSoft: { bg: colors.dangerSoft, fg: colors.textOnDark },
+  dangerOutline: {
+    bg: colors.surface,
+    fg: colors.danger,
+    border: colors.border,
+  },
+  ghost: { bg: 'transparent', fg: colors.text },
 };
 
 export function Button({
@@ -33,20 +51,25 @@ export function Button({
   size = 'md',
   leading,
   testID,
+  accessibilityLabel,
+  selected,
 }: Props) {
+  const ghost = variant === 'ghost';
   const p = disabled
-    ? { bg: colors.surfaceMuted, fg: colors.textMuted }
+    ? { bg: ghost ? 'transparent' : colors.surfaceMuted, fg: colors.textMuted }
     : palette[variant];
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled, selected }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         size === 'lg' && styles.lg,
+        ghost && styles.ghost,
         { backgroundColor: p.bg },
         'border' in p && p.border
           ? { borderWidth: 1, borderColor: p.border }
@@ -60,6 +83,7 @@ export function Button({
           style={[
             typography.button,
             size === 'lg' && styles.lgText,
+            ghost && styles.ghostText,
             { color: p.fg },
           ]}
         >
@@ -80,6 +104,8 @@ const styles = StyleSheet.create({
   },
   lg: { height: 56 },
   lgText: { fontSize: 16 },
+  ghost: { height: 44, borderRadius: radii.pill },
+  ghostText: { fontSize: 14 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   pressed: { opacity: 0.85 },
 });

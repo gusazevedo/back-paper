@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { devSignIn, devSignInAvailable } from '../auth/devSignIn';
 import { AuthError, signInWithGoogle } from '../auth/google';
 import { Button } from '../components/Button';
 import { t, TranslationKey } from '../i18n';
@@ -134,6 +135,24 @@ export function LoginScreen() {
               {t('login.signedInOnly')}
             </Text>
           )}
+          {devSignInAvailable ? (
+            <Button
+              variant="secondary"
+              label={t('login.devSignIn')}
+              disabled={busy}
+              onPress={async () => {
+                setBusy(true);
+                setError(null);
+                try {
+                  await devSignIn();
+                } catch {
+                  setError('login.errors.failed');
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            />
+          ) : null}
         </View>
       </View>
     </View>

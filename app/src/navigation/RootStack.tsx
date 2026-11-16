@@ -2,8 +2,13 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
+import { DeleteAccountScreen } from '../screens/DeleteAccountScreen';
+import { DetailScreen } from '../screens/DetailScreen';
+import { FolderScreen } from '../screens/FolderScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { PublicProfileScreen } from '../screens/PublicProfileScreen';
 import { PublishScreen } from '../screens/PublishScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 import { colors } from '../theme';
 import { RootTabParamList, RootTabs } from './RootTabs';
 
@@ -11,6 +16,14 @@ export type RootStackParamList = {
   Login: undefined;
   Tabs: NavigatorScreenParams<RootTabParamList>;
   Publish: undefined;
+  /** `thumbKey` lets the screen show the thumbnail before the wallpaper loads. */
+  Detail: { id: string; thumbKey?: string };
+  /** `name` shows in the header before the folder list loads. */
+  Folder: { id: string; name?: string };
+  /** `name` shows in the header before the profile loads. */
+  PublicProfile: { userId: string; name?: string };
+  Settings: undefined;
+  DeleteAccount: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -39,6 +52,16 @@ export function RootStack() {
               animation: 'slide_from_bottom',
             }}
           />
+          {/* Above the tabs, so closing it returns to the grid at the same scroll position. */}
+          <Stack.Screen
+            name="Detail"
+            component={DetailScreen}
+            options={{ animation: 'fade_from_bottom', gestureEnabled: false }}
+          />
+          <Stack.Screen name="Folder" component={FolderScreen} />
+          <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
         </>
       ) : (
         <Stack.Screen

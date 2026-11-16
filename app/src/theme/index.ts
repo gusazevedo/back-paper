@@ -9,6 +9,8 @@ export const colors = {
   placeholder: '#E6E6E1',
   text: '#161614',
   textMuted: '#5E5E59',
+  /** Body copy inside tinted panels (limit reached, rejected image). */
+  textSecondary: '#4A4A45',
   textOnDark: '#FFFFFF',
   primary: '#161614',
   border: '#DCDCD6',
@@ -16,7 +18,17 @@ export const colors = {
   borderDashed: '#A9A9A2',
   divider: '#E8E8E3',
   danger: '#B3261E',
+  /** Filled heart of a liked wallpaper. */
+  like: '#D4324A',
   dangerSoft: '#D43D22',
+  dangerSurface: '#FBEEEA',
+  dangerText: '#8C1D18',
+  dangerBorder: '#E8B3A6',
+  /** Disabled buttons sitting on a surfaceMuted panel. */
+  disabledOnMuted: '#D9D9D3',
+  disabledBorderOnMuted: '#CFCFC8',
+  hairline: '#E2E2DD',
+  track: '#DCDCD6',
   overlay: 'rgba(22, 22, 20, 0.4)',
   shadow: '#161614',
 };
@@ -38,6 +50,9 @@ export const radii = {
   card: 18,
   nav: 22,
   sheet: 24,
+  preview: 20,
+  panel: 22,
+  notice: 12,
   pill: 999,
 };
 

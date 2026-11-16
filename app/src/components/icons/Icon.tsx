@@ -16,13 +16,24 @@ export type IconName =
   | 'lock'
   | 'folder'
   | 'edit'
-  | 'trash';
+  | 'trash'
+  | 'image'
+  | 'check'
+  | 'replace'
+  | 'alert'
+  | 'clock'
+  | 'flag'
+  | 'heart'
+  | 'bookmark'
+  | 'download';
 
 type Props = {
   name: IconName;
   size?: number;
   color?: string;
   strokeWidth?: number;
+  /** Fills closed shapes (a liked heart, a saved bookmark). */
+  fill?: string;
 };
 
 export function Icon({
@@ -30,13 +41,14 @@ export function Icon({
   size = 24,
   color = colors.text,
   strokeWidth = 2,
+  fill = 'none',
 }: Props) {
   const stroke = {
     stroke: color,
     strokeWidth,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
-    fill: 'none',
+    fill,
   };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -113,5 +125,46 @@ function renderPaths(
       return <Path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" {...s} />;
     case 'trash':
       return <Path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" {...s} />;
+    case 'image':
+      return (
+        <>
+          <Rect x={5} y={2.5} width={14} height={19} rx={2.5} {...s} />
+          <Circle cx={9.5} cy={8} r={1.5} {...s} />
+          <Path d="M5 17l4.5-4.5 3.5 3.5 2-2 4 4" {...s} />
+        </>
+      );
+    case 'check':
+      return <Path d="M5 12.5l4.5 4.5L19 7.5" {...s} />;
+    case 'replace':
+      return <Path d="M4 8h14l-3-3M20 16H6l3 3" {...s} />;
+    case 'alert':
+      return (
+        <>
+          <Circle cx={12} cy={12} r={9} {...s} />
+          <Path d="M12 7.5v5.5M12 16.5v.01" {...s} />
+        </>
+      );
+    case 'clock':
+      return (
+        <>
+          <Circle cx={12} cy={12} r={9} {...s} />
+          <Path d="M12 7v5l3 2" {...s} />
+        </>
+      );
+    case 'flag':
+      return <Path d="M5 21V4M5 4h12l-2.5 4.5L17 13H5" {...s} />;
+    case 'heart':
+      return (
+        <Path
+          d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"
+          {...s}
+        />
+      );
+    case 'bookmark':
+      return (
+        <Path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z" {...s} />
+      );
+    case 'download':
+      return <Path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14" {...s} />;
   }
 }

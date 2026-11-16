@@ -6,7 +6,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:new": "supabase migration new",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "fn:test": "npx --yes deno@2 test --allow-read supabase/functions"
   },
   "devDependencies": {
     "supabase": "3.1.0"

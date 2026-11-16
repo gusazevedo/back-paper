@@ -1,5 +1,8 @@
 begin;
-select plan(8);
+select plan(11);
+
+-- Ignore whatever the local database holds; everything is rolled back at the end.
+delete from auth.users;
 
 -- Signup trigger builds the profile from Google metadata.
 insert into auth.users (id, email, raw_user_meta_data)
@@ -42,6 +45,17 @@ select throws_ok(
 select throws_ok(
   $$insert into public.profiles (id, display_name) values (gen_random_uuid(), 'x')$$,
   '42501', null, 'users cannot insert profiles');
+
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-000000000001", "role": "authenticated"}';
+select throws_ok(
+  $$update public.profiles set display_name = '' where id = '00000000-0000-0000-0000-000000000001'$$,
+  '23514', null, 'a display name cannot be empty');
+select throws_ok(
+  $$update public.profiles set display_name = '   ' where id = '00000000-0000-0000-0000-000000000001'$$,
+  '23514', null, 'a display name cannot be only spaces');
+select throws_ok(
+  $$update public.profiles set display_name = repeat('x', 41) where id = '00000000-0000-0000-0000-000000000001'$$,
+  '23514', null, 'a display name has at most 40 characters');
 
 select * from finish();
 rollback;
