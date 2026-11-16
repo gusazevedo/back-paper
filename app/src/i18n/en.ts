@@ -223,6 +223,14 @@ export const en = {
     error: "Couldn't load your folders.",
     retry: 'Try again',
   },
+  settings: {
+    title: 'Settings',
+    editName: 'Edit display name',
+    nameLabel: 'Display name',
+    save: 'Save',
+    saveFailed: "Couldn't save your name. Try again.",
+    logOut: 'Log out',
+  },
   publicProfile: {
     empty: "They haven't published any wallpapers yet.",
     error: "Couldn't load this profile.",
@@ -232,7 +240,6 @@ export const en = {
     sections: 'Profile sections',
     published: 'Published',
     folders: 'Folders',
-    logOut: 'Log out',
     settings: 'Settings',
     publishedOne: '1 wallpaper published',
     publishedMany: '{count} wallpapers published',
