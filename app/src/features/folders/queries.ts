@@ -1,4 +1,5 @@
 import {
+  InfiniteData,
   useInfiniteQuery,
   useMutation,
   useQuery,
@@ -126,7 +127,13 @@ export function useToggleFolder(wallpaperId: string) {
   const key = queryKeys.wallpaperFolders(wallpaperId);
   return useMutation({
     scope: { id: `folders:${wallpaperId}` },
-    mutationFn: async ({ folderId, add }: { folderId: string; add: boolean }) => {
+    mutationFn: async ({
+      folderId,
+      add,
+    }: {
+      folderId: string;
+      add: boolean;
+    }) => {
       const items = supabase.from('folder_items');
       const { error } = add
         ? await items.insert({ folder_id: folderId, wallpaper_id: wallpaperId })
@@ -184,5 +191,98 @@ export function useCreateFolder(userId: string, wallpaperId?: string) {
       return folderId;
     },
     onSettled: () => invalidateFolders(queryClient, wallpaperId ?? ''),
+  });
+}
+
+/** R-FOLD-3: same name rules as creating; a taken name rejects with FolderNameTakenError. */
+export function useRenameFolder(folderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (name: string) => {
+      const { error } = await supabase
+        .from('folders')
+        .update({ name: name.trim() })
+        .eq('id', folderId);
+      if (error) {
+        throw error.code === UNIQUE_VIOLATION
+          ? new FolderNameTakenError()
+          : error;
+      }
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.folderList }),
+  });
+}
+
+/** R-FOLD-3: removes the folder only; the wallpapers in it are untouched. */
+export function useDeleteFolder(folderId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('folders')
+        .delete()
+        .eq('id', folderId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData<Folder[]>(queryKeys.folderList, list =>
+        list?.filter(f => f.id !== folderId),
+      );
+      queryClient.removeQueries({ queryKey: queryKeys.folderItems(folderId) });
+      // Save sheets must stop showing it as checked.
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.folders,
+        refetchType: 'none',
+      });
+    },
+  });
+}
+
+type ItemPages = InfiniteData<FolderWallpaper[], FolderCursor | null>;
+
+/** R-FOLD-3: takes one wallpaper out of the folder; the grid updates at once. */
+export function useRemoveFromFolder(folderId: string) {
+  const queryClient = useQueryClient();
+  const key = queryKeys.folderItems(folderId);
+  return useMutation({
+    mutationFn: async (wallpaperId: string) => {
+      const { error } = await supabase
+        .from('folder_items')
+        .delete()
+        .eq('folder_id', folderId)
+        .eq('wallpaper_id', wallpaperId);
+      if (error) throw error;
+    },
+    onMutate: async (wallpaperId: string) => {
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ItemPages>(key);
+      queryClient.setQueryData<ItemPages>(key, data =>
+        data
+          ? {
+              ...data,
+              pages: data.pages.map(p => p.filter(w => w.id !== wallpaperId)),
+            }
+          : data,
+      );
+      queryClient.setQueryData<Folder[]>(queryKeys.folderList, list =>
+        list?.map(f =>
+          f.id === folderId
+            ? { ...f, item_count: Math.max(f.item_count - 1, 0) }
+            : f,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_error, _id, context) => {
+      queryClient.setQueryData(key, context?.previous);
+    },
+    onSettled: (_data, _error, wallpaperId) => {
+      // The cover may have changed, and the detail's Save state too.
+      queryClient.invalidateQueries({ queryKey: queryKeys.folderList });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.wallpaperFolders(wallpaperId),
+      });
+    },
   });
 }

@@ -21,7 +21,7 @@ export function createSupabaseMock() {
       | null
       | ((
           table: string,
-          op: 'insert' | 'delete',
+          op: 'insert' | 'delete' | 'update',
           values: unknown,
         ) => Result | void),
   };
@@ -36,12 +36,16 @@ export function createSupabaseMock() {
     let single = false;
     let inserted: unknown[] = [];
     let headCount = false;
-    let write: { op: 'insert' | 'delete'; values?: unknown } | null = null;
+    let write: { op: 'insert' | 'delete' | 'update'; values?: unknown } | null =
+      null;
     const matches = (row: unknown) =>
       filters.every(
         ([col, val]) => (row as Record<string, unknown>)[col] === val,
       );
-    const runWrite = (op: 'insert' | 'delete', values: unknown): Result => {
+    const runWrite = (
+      op: 'insert' | 'delete' | 'update',
+      values: unknown,
+    ): Result => {
       const answer = state.onWrite?.(table, op, values ?? filters);
       if (answer) return answer;
       const rows = state.tables[table] ?? [];
@@ -53,7 +57,14 @@ export function createSupabaseMock() {
         state.tables[table] = [...rows, ...inserted];
         return { data: single ? inserted[0] : null, error: null };
       }
-      state.tables[table] = rows.filter(row => !matches(row));
+      state.tables[table] =
+        op === 'update'
+          ? rows.map(row =>
+              matches(row)
+                ? { ...(row as object), ...(values as object) }
+                : row,
+            )
+          : rows.filter(row => !matches(row));
       return { data: null, error: null };
     };
     const run = (): Result => {
@@ -86,6 +97,10 @@ export function createSupabaseMock() {
       },
       delete: () => {
         write = { op: 'delete' };
+        return builder;
+      },
+      update: (values: unknown) => {
+        write = { op: 'update', values };
         return builder;
       },
       single: () => {

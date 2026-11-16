@@ -132,7 +132,10 @@ describe('save to folder', () => {
       await screen.findByRole('checkbox', { name: 'Lock screen' }),
     );
     expect(
-      await screen.findByRole('checkbox', { name: 'Lock screen', checked: true }),
+      await screen.findByRole('checkbox', {
+        name: 'Lock screen',
+        checked: true,
+      }),
     ).toBeTruthy();
     expect(rows('folder_items')).toContainEqual({
       folder_id: 'f2',
@@ -281,5 +284,118 @@ describe('folder names', () => {
     expect(folderNameProblem('   ', [])).toBe('empty');
     expect(folderNameProblem(' LOCK screen ', ['Lock screen'])).toBe('taken');
     expect(folderNameProblem('Home', ['Lock screen'])).toBeNull();
+  });
+});
+
+describe('managing folders', () => {
+  const openProfileFolders = async () => {
+    await render(<App />);
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Profile' }));
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Folders' }));
+  };
+  const openFolder = async (label: string, name: string) => {
+    await openProfileFolders();
+    await fireEvent.press(await screen.findByRole('button', { name: label }));
+    await screen.findByRole('header', { name });
+  };
+
+  it('creates a folder from the "New folder" card, empty and without a cover', async () => {
+    await openProfileFolders();
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'New folder' }),
+    );
+    const field = await screen.findByLabelText('Folder name');
+    await fireEvent.changeText(field, 'lock SCREEN');
+    expect(
+      screen.getByText('You already have a folder with this name.'),
+    ).toBeTruthy();
+    await fireEvent.changeText(field, 'Home screen');
+    await fireEvent.press(screen.getByRole('button', { name: 'Create' }));
+    expect(
+      await screen.findByRole('button', { name: 'Home screen, 0 wallpapers' }),
+    ).toBeTruthy();
+    expect(rows('folders')).toContainEqual({
+      id: 'folders-3',
+      owner_id: ME,
+      name: 'Home screen',
+    });
+  });
+
+  it('renames a folder with the same rules', async () => {
+    await openFolder('Favorites, 1 wallpaper', 'Favorites');
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Folder options' }),
+    );
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Rename' }),
+    );
+    const field = await screen.findByLabelText('Folder name');
+    expect(field.props.value).toBe('Favorites');
+    const save = screen.getByRole('button', { name: 'Save' });
+
+    await fireEvent.changeText(field, 'LOCK screen');
+    expect(
+      screen.getByText('You already have a folder with this name.'),
+    ).toBeTruthy();
+    expect(save).toBeDisabled();
+
+    // Changing only the case of its own name is fine.
+    await fireEvent.changeText(field, 'FAVORITES');
+    expect(
+      screen.queryByText('You already have a folder with this name.'),
+    ).toBeNull();
+
+    await fireEvent.changeText(field, 'Best ones');
+    await fireEvent.press(save);
+    expect(
+      await screen.findByRole('header', { name: 'Best ones' }),
+    ).toBeTruthy();
+    expect(rows('folders').find(f => f.id === 'f1')?.name).toBe('Best ones');
+  });
+
+  it('deletes a folder after confirming, keeping the wallpapers', async () => {
+    await openFolder('Favorites, 1 wallpaper', 'Favorites');
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Folder options' }),
+    );
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Delete folder' }),
+    );
+    expect(
+      await screen.findByText(
+        'The folder is removed. The wallpapers in it are not deleted.',
+      ),
+    ).toBeTruthy();
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Delete folder' }),
+    );
+    expect(
+      await screen.findByRole('button', { name: 'Lock screen, 1 wallpaper' }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: 'Favorites, 1 wallpaper' }),
+    ).toBeNull();
+    expect(rows('folders').map(f => f.id)).toEqual(['f2']);
+    expect(rows('wallpapers')).toHaveLength(3);
+  });
+
+  it('removes a wallpaper from the folder after confirming', async () => {
+    await openFolder('Favorites, 1 wallpaper', 'Favorites');
+    await fireEvent.press(
+      await screen.findByRole('button', {
+        name: 'Remove Half Past from folder',
+      }),
+    );
+    expect(
+      await screen.findByText(
+        '"Half Past" will be taken out of Favorites. The wallpaper itself is not deleted.',
+      ),
+    ).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Remove' }));
+    expect(await screen.findByText('This folder is empty')).toBeTruthy();
+    expect(rows('folder_items')).toEqual([
+      { folder_id: 'f2', wallpaper_id: 'w1' },
+    ]);
+    expect(rows('wallpapers')).toHaveLength(3);
   });
 });

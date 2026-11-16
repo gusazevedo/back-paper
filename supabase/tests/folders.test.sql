@@ -1,5 +1,5 @@
 begin;
-select plan(20);
+select plan(24);
 
 -- Ignore whatever the local database holds; everything is rolled back at the end.
 delete from auth.users;
@@ -78,6 +78,18 @@ select results_eq(
   $$ values ('00000000-0000-0000-0000-00000000f001'::uuid) $$,
   'folder_wallpapers pages with a keyset cursor');
 
+select throws_ok(
+  $$ update public.folders set name = 'lock SCREEN' where id = '00000000-0000-0000-0000-0000000000d1' $$,
+  '23505', null, 'renaming follows the same uniqueness rule');
+
+select lives_ok(
+  $$ update public.folders set name = 'FAVORITES' where id = '00000000-0000-0000-0000-0000000000d1' $$,
+  'a folder can change the case of its own name');
+
+select throws_ok(
+  $$ update public.folders set owner_id = '00000000-0000-0000-0000-0000000000a1' where id = '00000000-0000-0000-0000-0000000000d1' $$,
+  '42501', null, 'a folder cannot be handed to someone else');
+
 -- a1 sees none of b2's folders and cannot touch them.
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1", "role": "authenticated"}';
 
@@ -90,8 +102,10 @@ select throws_ok(
   $$ insert into public.folder_items (folder_id, wallpaper_id) values ('00000000-0000-0000-0000-0000000000d2', '00000000-0000-0000-0000-00000000f002') $$,
   '42501', null, 'users cannot add to someone else''s folder');
 
+update public.folders set name = 'Stolen' where id = '00000000-0000-0000-0000-0000000000d1';
 delete from public.folders where id = '00000000-0000-0000-0000-0000000000d1';
 reset role;
+select is((select name from public.folders where id = '00000000-0000-0000-0000-0000000000d1'), 'FAVORITES', 'users cannot rename someone else''s folder');
 select is((select count(*)::int from public.folders where id = '00000000-0000-0000-0000-0000000000d1'), 1, 'users cannot delete someone else''s folder');
 
 set local role anon;
