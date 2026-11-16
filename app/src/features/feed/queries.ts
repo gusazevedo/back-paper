@@ -13,6 +13,7 @@ export type FeedItem = {
   height: number;
   like_count: number;
   created_at: string;
+  liked_by_me: boolean;
 };
 
 /** Keyset cursor; `like_count` is only read by the "liked" sort. */

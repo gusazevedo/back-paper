@@ -63,6 +63,7 @@ export const en = {
     loading: 'Loading wallpaper',
     report: 'Report',
     like: 'Like',
+    unlike: 'Unlike',
     likesOne: '1 like',
     likesMany: '{count} likes',
     save: 'Save',

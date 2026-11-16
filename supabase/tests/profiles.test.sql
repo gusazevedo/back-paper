@@ -1,6 +1,9 @@
 begin;
 select plan(8);
 
+-- Ignore whatever the local database holds; everything is rolled back at the end.
+delete from auth.users;
+
 -- Signup trigger builds the profile from Google metadata.
 insert into auth.users (id, email, raw_user_meta_data)
 values

@@ -1,8 +1,9 @@
 begin;
 select plan(17);
 
--- Start from an empty feed whatever the local database holds (rolled back at the end).
-delete from public.wallpapers;
+-- Ignore whatever the local database holds; everything is rolled back at the end.
+delete from auth.users;
+
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000e1', 'e@example.com'),

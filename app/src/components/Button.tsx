@@ -23,6 +23,8 @@ type Props = {
   testID?: string;
   /** Spoken label when the visible one is not enough (e.g. a bare like count). */
   accessibilityLabel?: string;
+  /** Toggle buttons (Like) report their on state to screen readers. */
+  selected?: boolean;
 };
 
 const palette: Record<
@@ -50,6 +52,7 @@ export function Button({
   leading,
   testID,
   accessibilityLabel,
+  selected,
 }: Props) {
   const ghost = variant === 'ghost';
   const p = disabled
@@ -60,7 +63,7 @@ export function Button({
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, selected }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [

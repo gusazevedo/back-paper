@@ -1,6 +1,9 @@
 begin;
 select plan(13);
 
+-- Ignore whatever the local database holds; everything is rolled back at the end.
+delete from auth.users;
+
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-0000-0000-0000000000a1', 'a@example.com', '{"full_name": "Author"}'),
   ('00000000-0000-0000-0000-0000000000b2', 'b@example.com', '{"full_name": "Viewer"}');

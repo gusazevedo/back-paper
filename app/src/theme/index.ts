@@ -18,6 +18,8 @@ export const colors = {
   borderDashed: '#A9A9A2',
   divider: '#E8E8E3',
   danger: '#B3261E',
+  /** Filled heart of a liked wallpaper. */
+  like: '#D4324A',
   dangerSoft: '#D43D22',
   dangerSurface: '#FBEEEA',
   dangerText: '#8C1D18',
