@@ -1,6 +1,7 @@
 /* eslint-env jest */
-jest.mock('react-native-safe-area-context', () =>
-  require('react-native-safe-area-context/jest/mock').default,
+jest.mock(
+  'react-native-safe-area-context',
+  () => require('react-native-safe-area-context/jest/mock').default,
 );
 
 jest.mock('react-native-image-picker', () => ({
@@ -30,9 +31,19 @@ jest.mock('react-native-blob-util', () => {
     };
     return result;
   });
-  return { __esModule: true, default: { fetch, wrap: p => `RNFetchBlob-file://${p}` } };
+  return {
+    __esModule: true,
+    default: { fetch, wrap: p => `RNFetchBlob-file://${p}` },
+  };
 });
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest'),
 );
+
+jest.mock('@react-native-documents/picker', () => ({
+  pick: jest.fn(),
+  types: { images: 'image/*' },
+  errorCodes: { OPERATION_CANCELED: 'OPERATION_CANCELED' },
+  isErrorWithCode: e => !!e && typeof e === 'object' && 'code' in e,
+}));

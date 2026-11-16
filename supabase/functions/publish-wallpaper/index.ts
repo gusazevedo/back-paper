@@ -1,12 +1,14 @@
 import { adminClient, fail, json, requireUser } from '../_shared/http.ts';
 import { readImageInfo } from '../_shared/imageInfo.ts';
 import { copyObject, deleteObjects, headObject, readHead } from '../_shared/storage.ts';
-import { finalKeys, isAllowedMime, isUuid, MAX_BYTES, pendingKeys } from '../_shared/uploads.ts';
+import { LIMIT_SQLSTATE, remainingPublishes } from '../_shared/quota.ts';
+import { checkImageRules, finalKeys, isAllowedMime, isUuid, pendingKeys } from '../_shared/uploads.ts';
 
 /**
  * Step 2 of publishing (§6.1): checks the uploaded objects, moves them out of
  * pending/ and records the wallpaper, its categories and the publish event.
- * Any failure removes the pending objects.
+ * Re-checks the upload rules (R-PUB-3 to R-PUB-6) from the stored header and
+ * the publish limit (R-PUB-9). Any failure removes the pending objects.
  */
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return fail(405, 'method_not_allowed');
@@ -31,7 +33,12 @@ Deno.serve(async (req) => {
     return fail(400, 'invalid_categories');
   }
 
+  const admin = adminClient();
   try {
+    if ((await remainingPublishes(admin, user.id)) <= 0) {
+      await discard();
+      return fail(429, 'publish_limit_reached');
+    }
     const [original, thumb] = await Promise.all([
       headObject(pending.original),
       headObject(pending.thumb),
@@ -40,15 +47,12 @@ Deno.serve(async (req) => {
       await discard();
       return fail(400, 'upload_missing');
     }
-    if (original.size > MAX_BYTES) {
-      await discard();
-      return fail(400, 'file_too_large');
-    }
     const info = readImageInfo(await readHead(pending.original));
     const thumbInfo = readImageInfo(await readHead(pending.thumb, 64));
-    if (!info || info.mime !== mime || thumbInfo?.mime !== 'image/webp') {
+    const broken = checkImageRules(info, original.size);
+    if (broken || !info || info.mime !== mime || thumbInfo?.mime !== 'image/webp') {
       await discard();
-      return fail(400, 'unsupported_format');
+      return fail(400, broken ?? 'unsupported_format');
     }
 
     const wallpaperId = crypto.randomUUID();
@@ -58,7 +62,7 @@ Deno.serve(async (req) => {
       copyObject(pending.thumb, final.thumb),
     ]);
 
-    const { data, error } = await adminClient().rpc('create_wallpaper', {
+    const { data, error } = await admin.rpc('create_wallpaper', {
       p_id: wallpaperId,
       p_author_id: user.id,
       p_title: cleanTitle || null,
@@ -73,6 +77,7 @@ Deno.serve(async (req) => {
     if (error) {
       await deleteObjects([final.original, final.thumb]).catch(() => undefined);
       await discard();
+      if (error.code === LIMIT_SQLSTATE) return fail(429, 'publish_limit_reached');
       return fail(400, error.code === '23503' ? 'invalid_categories' : 'publish_failed', error.message);
     }
 
