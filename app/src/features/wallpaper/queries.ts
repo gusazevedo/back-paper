@@ -88,3 +88,60 @@ export function useToggleLike(id: string, userId: string) {
     },
   });
 }
+
+/** The server refuses edits once the first 24 hours have passed (R-EDIT-2). */
+export class EditWindowClosedError extends Error {
+  constructor() {
+    super('edit window closed');
+  }
+}
+
+export type WallpaperEdit = { title: string; categories: string[] };
+
+/**
+ * R-EDIT-1: the author changes title and categories during the first 24 hours.
+ * The detail updates on success; grids that show the wallpaper refetch.
+ */
+export function useUpdateWallpaper(id: string) {
+  const queryClient = useQueryClient();
+  const key = queryKeys.wallpaper(id);
+  return useMutation({
+    mutationFn: async ({ title, categories }: WallpaperEdit) => {
+      const { error } = await supabase.rpc('update_wallpaper', {
+        p_id: id,
+        p_title: title,
+        p_categories: categories,
+      });
+      if (error) {
+        throw error.code === 'BP410' ? new EditWindowClosedError() : error;
+      }
+    },
+    onSuccess: (_data, { title, categories }) => {
+      queryClient.setQueryData<WallpaperDetail>(key, w =>
+        w
+          ? {
+              ...w,
+              title: title.trim() || null,
+              wallpaper_categories: categories.map(category_slug => ({
+                category_slug,
+              })),
+            }
+          : w,
+      );
+      // Titles label the tiles and categories filter the feed.
+      for (const prefix of [
+        queryKeys.feed,
+        ['user-wallpapers'],
+        queryKeys.folders,
+      ]) {
+        queryClient.invalidateQueries({ queryKey: prefix });
+      }
+    },
+    onError: error => {
+      // Refetch so the Edit button disappears once the window has closed.
+      if (error instanceof EditWindowClosedError) {
+        queryClient.invalidateQueries({ queryKey: key });
+      }
+    },
+  });
+}

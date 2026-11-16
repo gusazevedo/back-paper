@@ -22,6 +22,7 @@ import { useDownload } from '../features/download/useDownload';
 import { showOnlyCategory } from '../features/feed/filter';
 import { useWallpaperFolders } from '../features/folders/queries';
 import { SaveSheet } from '../features/folders/SaveSheet';
+import { EditSheet } from '../features/wallpaper/EditSheet';
 import {
   EDIT_WINDOW_MS,
   useToggleLike,
@@ -178,6 +179,7 @@ function Info({
   const mine = w.author_id === me;
   const categories = useCategories();
   const [saveOpen, setSaveOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const folders = useWallpaperFolders(w.id, !mine);
   const saved = (folders.data?.length ?? 0) > 0;
   // Chips follow the fixed category order, not the order they were picked in.
@@ -313,6 +315,7 @@ function Info({
           <Button
             variant="secondary"
             label={t('detail.edit')}
+            onPress={() => setEditOpen(true)}
             leading={<Icon name="edit" size={20} />}
           />
         ) : null}
@@ -324,7 +327,13 @@ function Info({
           />
         ) : null}
       </View>
-      {mine ? null : (
+      {mine ? (
+        <EditSheet
+          wallpaper={w}
+          visible={editOpen}
+          onDismiss={() => setEditOpen(false)}
+        />
+      ) : (
         <SaveSheet
           wallpaperId={w.id}
           userId={me}
