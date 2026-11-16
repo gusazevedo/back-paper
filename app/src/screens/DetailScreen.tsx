@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  ToastAndroid,
   View,
 } from 'react-native';
 import FastImage from 'react-native-fast-image';
@@ -15,6 +16,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { Avatar } from '../components/Avatar';
 import { Button } from '../components/Button';
 import { Chip } from '../components/Chip';
+import { ConfirmSheet } from '../components/Sheet';
 import { IconButton } from '../components/IconButton';
 import { Icon } from '../components/icons/Icon';
 import { useCategories } from '../features/categories/useCategories';
@@ -25,6 +27,7 @@ import { SaveSheet } from '../features/folders/SaveSheet';
 import { EditSheet } from '../features/wallpaper/EditSheet';
 import {
   EDIT_WINDOW_MS,
+  useDeleteWallpaper,
   useToggleLike,
   useWallpaper,
   WallpaperDetail,
@@ -130,6 +133,7 @@ export function DetailScreen({ navigation, route }: Props) {
           wallpaper={w}
           me={me ?? ''}
           onToggleLike={() => like.mutate(!w.liked_by_me)}
+          onDeleted={() => navigation.goBack()}
           onPickCategory={slug => {
             showOnlyCategory(slug);
             navigation.navigate('Tabs', { screen: 'Feed' });
@@ -170,16 +174,20 @@ function Info({
   me,
   onToggleLike,
   onPickCategory,
+  onDeleted,
 }: {
   wallpaper: WallpaperDetail;
   me: string;
   onToggleLike: () => void;
+  onDeleted: () => void;
   onPickCategory: (slug: string) => void;
 }) {
   const mine = w.author_id === me;
   const categories = useCategories();
   const [saveOpen, setSaveOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const remove = useDeleteWallpaper(w.id);
   const folders = useWallpaperFolders(w.id, !mine);
   const saved = (folders.data?.length ?? 0) > 0;
   // Chips follow the fixed category order, not the order they were picked in.
@@ -323,16 +331,41 @@ function Info({
           <Button
             variant="dangerOutline"
             label={t('detail.delete')}
+            onPress={() => setDeleteOpen(true)}
             leading={<Icon name="trash" size={20} color={colors.danger} />}
           />
         ) : null}
       </View>
       {mine ? (
-        <EditSheet
-          wallpaper={w}
-          visible={editOpen}
-          onDismiss={() => setEditOpen(false)}
-        />
+        <>
+          <EditSheet
+            wallpaper={w}
+            visible={editOpen}
+            onDismiss={() => setEditOpen(false)}
+          />
+          <ConfirmSheet
+            visible={deleteOpen}
+            title={t('detail.deleteTitle')}
+            message={t('detail.deleteBody')}
+            confirmLabel={t('detail.delete')}
+            onCancel={() => setDeleteOpen(false)}
+            onConfirm={() => {
+              if (remove.isPending) return;
+              remove.mutate(undefined, {
+                onSuccess: () => {
+                  setDeleteOpen(false);
+                  ToastAndroid.show(t('detail.deleted'), ToastAndroid.SHORT);
+                  onDeleted();
+                },
+                onError: () =>
+                  ToastAndroid.show(
+                    t('detail.deleteFailed'),
+                    ToastAndroid.LONG,
+                  ),
+              });
+            }}
+          />
+        </>
       ) : (
         <SaveSheet
           wallpaperId={w.id}

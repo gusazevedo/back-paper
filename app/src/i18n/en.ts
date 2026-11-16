@@ -76,6 +76,11 @@ export const en = {
     downloadNoPermission: 'Allow storage access to save wallpapers.',
     edit: 'Edit',
     delete: 'Delete',
+    deleteTitle: 'Delete this wallpaper?',
+    deleteBody:
+      "This can't be undone. It will be removed from the feed and from everyone's folders.",
+    deleted: 'Wallpaper deleted',
+    deleteFailed: "Couldn't delete the wallpaper. Try again.",
     categories: 'Categories',
     author: 'By {name}',
     unavailable: {
