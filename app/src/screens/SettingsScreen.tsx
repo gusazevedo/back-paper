@@ -18,7 +18,7 @@ import { colors, fonts, spacing, typography } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
-/** Settings (§4.11): Edit display name and Log out. Delete account arrives with #17. */
+/** Settings (§4.11): Edit display name, Log out and Delete account. */
 export function SettingsScreen({ navigation }: Props) {
   const insets = useSafeAreaInsets();
   const auth = useAuth();
@@ -59,9 +59,23 @@ export function SettingsScreen({ navigation }: Props) {
         <Pressable
           accessibilityRole="button"
           onPress={() => signOut()}
-          style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.row,
+            styles.divider,
+            pressed && styles.pressed,
+          ]}
         >
           <Text style={styles.label}>{t('settings.logOut')}</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('DeleteAccount')}
+          style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+        >
+          <Text style={[styles.label, styles.danger]}>
+            {t('settings.deleteAccount')}
+          </Text>
+          <Icon name="chevronRight" size={20} color={colors.danger} />
         </Pressable>
       </View>
       <NameSheet
@@ -108,6 +122,7 @@ const styles = StyleSheet.create({
   },
   pressed: { backgroundColor: colors.background },
   rowText: { flex: 1, minWidth: 0 },
+  danger: { flex: 1, color: colors.danger },
   label: {
     fontFamily: fonts.medium,
     fontSize: 15,

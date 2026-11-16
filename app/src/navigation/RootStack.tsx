@@ -2,6 +2,7 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
+import { DeleteAccountScreen } from '../screens/DeleteAccountScreen';
 import { DetailScreen } from '../screens/DetailScreen';
 import { FolderScreen } from '../screens/FolderScreen';
 import { LoginScreen } from '../screens/LoginScreen';
@@ -22,6 +23,7 @@ export type RootStackParamList = {
   /** `name` shows in the header before the profile loads. */
   PublicProfile: { userId: string; name?: string };
   Settings: undefined;
+  DeleteAccount: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -59,6 +61,7 @@ export function RootStack() {
           <Stack.Screen name="Folder" component={FolderScreen} />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
         </>
       ) : (
         <Stack.Screen

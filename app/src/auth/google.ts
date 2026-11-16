@@ -68,11 +68,14 @@ export async function signInWithGoogle(): Promise<SignInResult> {
   }
 }
 
-/** Clears both the Google and the Supabase session. */
-export async function signOut(): Promise<void> {
+/**
+ * Clears both the Google and the Supabase session. After deleting the account
+ * the server no longer knows the user, so `localOnly` just drops the session.
+ */
+export async function signOut({ localOnly = false } = {}): Promise<void> {
   if (env.googleWebClientId) {
     ensureConfigured();
     await GoogleSignin.signOut().catch(() => undefined);
   }
-  await supabase.auth.signOut();
+  await supabase.auth.signOut(localOnly ? { scope: 'local' } : undefined);
 }
