@@ -9,9 +9,14 @@ import {
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
 import App from '../src/App';
-import { useFeed } from '../src/features/feed/queries';
+import { resetFeedFilter } from '../src/features/feed/filter';
+import {
+  feedCursor,
+  feedQueryKey,
+  useFeed,
+} from '../src/features/feed/queries';
 import { nextCursor } from '../src/lib/keyset';
-import { queryClient, queryKeys } from '../src/lib/queryClient';
+import { queryClient } from '../src/lib/queryClient';
 import { supabase } from '../src/lib/supabase';
 import { useRefreshFromStart } from '../src/lib/useRefreshFromStart';
 import type { SupabaseMock } from '../testing/mockSupabase';
@@ -30,16 +35,26 @@ const row = (n: number, author = 'u2') => ({
   thumb_key: `w/w${n}/thumb.webp`,
   width: 1080,
   height: 2340,
+  like_count: 0,
   created_at: `2026-11-${String(n).padStart(2, '0')}T00:00:00Z`,
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
+  resetFeedFilter();
   mock.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
   mock.__state.tables = {
     profiles: [{ id: 'u1', display_name: 'Maya', avatar_url: null }],
+    categories: [
+      { slug: 'ai', label: 'AI' },
+      { slug: 'dark', label: 'Dark' },
+      { slug: 'nature', label: 'Nature' },
+    ],
   };
-  mock.__state.rpc = { feed: [row(3, 'u1'), row(2), row(1)] };
+  mock.__state.rpc = {
+    feed: [row(3, 'u1'), row(2), row(1)],
+    feed_count: () => ({ data: 3, error: null }),
+  };
 });
 
 describe('feed', () => {
@@ -54,6 +69,7 @@ describe('feed', () => {
     expect(screen.queryByText('Wallpaper 3')).toBeNull();
     expect(mock.rpc).toHaveBeenCalledWith('feed', {
       p_categories: null,
+      p_sort: 'recent',
       p_cursor: null,
       p_limit: 20,
     });
@@ -84,6 +100,8 @@ describe('feed', () => {
 });
 
 describe('pagination', () => {
+  const FILTER = { sort: 'recent' as const, categories: [] };
+
   it('asks for the page after the last row of a full page', () => {
     const page = Array.from({ length: 20 }, (_, i) => row(20 - i));
     expect(nextCursor(page, 20)).toEqual({
@@ -105,10 +123,10 @@ describe('pagination', () => {
     );
     const { result } = await renderHook(
       () => {
-        const feed = useFeed();
+        const feed = useFeed(FILTER);
         // Read in render so React Query's tracked result re-renders on page changes.
         const pages = feed.data?.pages.length ?? 0;
-        return { feed, pages, pull: useRefreshFromStart(queryKeys.feed) };
+        return { feed, pages, pull: useRefreshFromStart(feedQueryKey(FILTER)) };
       },
       { wrapper },
     );
@@ -125,5 +143,123 @@ describe('pagination', () => {
       expect.objectContaining({ p_cursor: null }),
     );
     expect(result.current.pull.refreshing).toBe(false);
+  });
+});
+
+const lastFeedArgs = () => {
+  const calls = mock.rpc.mock.calls.filter(([name]) => name === 'feed');
+  return calls[calls.length - 1][1];
+};
+
+describe('sort and categories', () => {
+  it('switches to Most liked and back', async () => {
+    await render(<App />);
+    await screen.findAllByRole('button', { name: /Wallpaper/ });
+    await fireEvent.press(screen.getByRole('tab', { name: 'Most liked' }));
+    await waitFor(() =>
+      expect(lastFeedArgs()).toEqual(
+        expect.objectContaining({ p_sort: 'liked', p_cursor: null }),
+      ),
+    );
+    await fireEvent.press(screen.getByRole('tab', { name: 'Recent' }));
+    // Recent is still cached, so it shows again without a new request.
+    expect(
+      screen.getByRole('tab', { name: 'Recent' }).props.accessibilityState,
+    ).toEqual(expect.objectContaining({ selected: true }));
+  });
+
+  it('filters by any of several categories, shown as removable chips', async () => {
+    await render(<App />);
+    expect(await screen.findByText('All categories')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Categories' }));
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Nature' }),
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'AI' }));
+    await waitFor(() =>
+      expect(lastFeedArgs()).toEqual(
+        expect.objectContaining({ p_categories: ['ai', 'nature'] }),
+      ),
+    );
+    expect(mock.rpc).toHaveBeenCalledWith('feed_count', {
+      p_categories: ['ai', 'nature'],
+    });
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Show 3 wallpapers' }),
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Categories, 2 selected' }),
+    ).toBeTruthy();
+    expect(screen.queryByText('All categories')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Remove AI' }));
+    expect(
+      await screen.findByRole('button', { name: 'Categories, 1 selected' }),
+    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Remove Nature' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Remove AI' })).toBeNull();
+  });
+
+  it('Clear goes back to all categories', async () => {
+    await render(<App />);
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Categories' }),
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'Dark' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Clear' }));
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Show 3 wallpapers' }),
+    );
+    expect(await screen.findByText('All categories')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Remove Dark' })).toBeNull();
+  });
+
+  it('a category chip in the detail shows the feed with only that category', async () => {
+    mock.__state.tables.wallpapers = [
+      {
+        ...row(2),
+        original_key: 'w/w2/original.jpg',
+        author: { display_name: 'Yuki', avatar_url: null },
+        wallpaper_categories: [{ category_slug: 'dark' }],
+      },
+    ];
+    await render(<App />);
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Categories' }),
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'AI' }));
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Show 3 wallpapers' }),
+    );
+
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Wallpaper 2' }),
+    );
+    await fireEvent.press(await screen.findByRole('button', { name: 'Dark' }));
+    expect(
+      await screen.findByRole('button', { name: 'Remove Dark' }),
+    ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Remove AI' })).toBeNull();
+    await waitFor(() =>
+      expect(lastFeedArgs()).toEqual(
+        expect.objectContaining({ p_categories: ['dark'] }),
+      ),
+    );
+  });
+
+  it('the Most liked cursor carries like_count', () => {
+    const page = Array.from({ length: 20 }, (_, i) => ({
+      ...row(20 - i),
+      like_count: 7,
+    }));
+    expect(feedCursor(page, 'liked')).toEqual({
+      created_at: '2026-11-01T00:00:00Z',
+      id: 'w1',
+      like_count: 7,
+    });
+    expect(feedCursor(page, 'recent')).toEqual({
+      created_at: '2026-11-01T00:00:00Z',
+      id: 'w1',
+    });
   });
 });
