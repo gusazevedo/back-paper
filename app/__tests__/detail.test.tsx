@@ -132,9 +132,7 @@ describe('wallpaper detail', () => {
 
   it('opens from the profile grid', async () => {
     await render(<App />);
-    await fireEvent.press(
-      await screen.findByRole('tab', { name: 'Profile' }),
-    );
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Profile' }));
     const tiles = await screen.findAllByRole('button', { name: 'Half Past' });
     await fireEvent.press(tiles[tiles.length - 1]);
     expect(await screen.findByRole('button', { name: 'Delete' })).toBeTruthy();

@@ -17,6 +17,7 @@ import { Chip } from '../components/Chip';
 import { IconButton } from '../components/IconButton';
 import { Icon } from '../components/icons/Icon';
 import { useCategories } from '../features/categories/useCategories';
+import { showOnlyCategory } from '../features/feed/filter';
 import {
   EDIT_WINDOW_MS,
   useWallpaper,
@@ -32,8 +33,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
 /**
  * One wallpaper (§4.4). Opens over the tabs, so closing returns to the grid where
- * it was. Actions depend on ownership; they get their behaviour in #8–#14, the
- * author link in #15 and the category chips in #7.
+ * it was. Actions depend on ownership; they get their behaviour in #8–#14 and
+ * the author link in #15. A category chip filters the feed by it (R-DET-1).
  */
 export function DetailScreen({ navigation, route }: Props) {
   const { id, thumbKey } = route.params;
@@ -94,7 +95,14 @@ export function DetailScreen({ navigation, route }: Props) {
       </View>
 
       {w ? (
-        <Info wallpaper={w} mine={w.author_id === me} />
+        <Info
+          wallpaper={w}
+          mine={w.author_id === me}
+          onPickCategory={slug => {
+            showOnlyCategory(slug);
+            navigation.navigate('Tabs', { screen: 'Feed' });
+          }}
+        />
       ) : wallpaper.isError ? (
         <View accessibilityRole="alert" style={styles.message}>
           <Text style={typography.sheetTitle}>
@@ -128,9 +136,11 @@ export function DetailScreen({ navigation, route }: Props) {
 function Info({
   wallpaper: w,
   mine,
+  onPickCategory,
 }: {
   wallpaper: WallpaperDetail;
   mine: boolean;
+  onPickCategory: (slug: string) => void;
 }) {
   const categories = useCategories();
   // Chips follow the fixed category order, not the order they were picked in.
@@ -187,7 +197,11 @@ function Info({
         contentContainerStyle={styles.chips}
       >
         {chips.map(c => (
-          <Chip key={c.slug} label={c.label} />
+          <Chip
+            key={c.slug}
+            label={c.label}
+            onPress={() => onPickCategory(c.slug)}
+          />
         ))}
       </ScrollView>
 
