@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { DetailScreen } from '../screens/DetailScreen';
 import { FolderScreen } from '../screens/FolderScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { PublicProfileScreen } from '../screens/PublicProfileScreen';
 import { PublishScreen } from '../screens/PublishScreen';
 import { colors } from '../theme';
 import { RootTabParamList, RootTabs } from './RootTabs';
@@ -17,6 +18,8 @@ export type RootStackParamList = {
   Detail: { id: string; thumbKey?: string };
   /** `name` shows in the header before the folder list loads. */
   Folder: { id: string; name?: string };
+  /** `name` shows in the header before the profile loads. */
+  PublicProfile: { userId: string; name?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -52,6 +55,7 @@ export function RootStack() {
             options={{ animation: 'fade_from_bottom', gestureEnabled: false }}
           />
           <Stack.Screen name="Folder" component={FolderScreen} />
+          <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
         </>
       ) : (
         <Stack.Screen

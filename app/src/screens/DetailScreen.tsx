@@ -44,8 +44,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Detail'>;
 
 /**
  * One wallpaper (§4.4). Opens over the tabs, so closing returns to the grid where
- * it was. Actions depend on ownership; they get their behaviour in #8–#14 and
- * the author link in #15. A category chip filters the feed by it (R-DET-1).
+ * it was. Actions depend on ownership; the author's name opens their profile
+ * and a category chip filters the feed by it (R-DET-1).
  */
 export function DetailScreen({ navigation, route }: Props) {
   const { id, thumbKey } = route.params;
@@ -140,6 +140,15 @@ export function DetailScreen({ navigation, route }: Props) {
           me={me ?? ''}
           onToggleLike={() => like.mutate(!w.liked_by_me)}
           onDeleted={() => navigation.goBack()}
+          onOpenAuthor={() =>
+            w.author_id === me
+              ? // My own name opens my profile tab (§4.11).
+                navigation.navigate('Tabs', { screen: 'Profile' })
+              : navigation.push('PublicProfile', {
+                  userId: w.author_id,
+                  name: w.author?.display_name,
+                })
+          }
           onPickCategory={slug => {
             showOnlyCategory(slug);
             navigation.navigate('Tabs', { screen: 'Feed' });
@@ -197,12 +206,14 @@ function Info({
   me,
   onToggleLike,
   onPickCategory,
+  onOpenAuthor,
   onDeleted,
 }: {
   wallpaper: WallpaperDetail;
   me: string;
   onToggleLike: () => void;
   onDeleted: () => void;
+  onOpenAuthor: () => void;
   onPickCategory: (slug: string) => void;
 }) {
   const mine = w.author_id === me;
@@ -239,6 +250,7 @@ function Info({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('detail.author', { name: author })}
+            onPress={onOpenAuthor}
             style={styles.author}
           >
             <Avatar name={author} uri={w.author?.avatar_url} size={24} />

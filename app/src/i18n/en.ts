@@ -223,6 +223,10 @@ export const en = {
     error: "Couldn't load your folders.",
     retry: 'Try again',
   },
+  publicProfile: {
+    empty: "They haven't published any wallpapers yet.",
+    error: "Couldn't load this profile.",
+  },
   profile: {
     title: 'Profile',
     sections: 'Profile sections',
