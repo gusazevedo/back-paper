@@ -38,11 +38,13 @@ const detailRow = (
   },
   // Stored in pick order; the screen shows them in category order.
   wallpaper_categories: [{ category_slug: 'nature' }, { category_slug: 'ai' }],
+  my_like: [] as unknown[],
   ...over,
 });
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mock.__state.onWrite = null;
   mock.__setSession({ access_token: 'jwt', user: { id: ME } });
   mock.__state.tables = {
     profiles: [{ id: ME, display_name: 'Maya', avatar_url: null }],
@@ -148,6 +150,69 @@ describe('wallpaper detail', () => {
         { timeout: 4000 },
       ),
     ).toBeTruthy();
+  });
+});
+
+describe('likes', () => {
+  const likeButton = (name: RegExp) => screen.findByRole('button', { name });
+
+  it('likes and unlikes with the button, updating the count', async () => {
+    await open('Quiet Ridge');
+    await fireEvent.press(await likeButton(/^Like, 1,284 likes$/));
+    expect(await likeButton(/^Unlike, 1,285 likes$/)).toBeTruthy();
+    expect(mock.__state.tables.likes).toEqual([
+      { user_id: ME, wallpaper_id: 'w1' },
+    ]);
+
+    await fireEvent.press(await likeButton(/^Unlike/));
+    expect(await likeButton(/^Like, 1,284 likes$/)).toBeTruthy();
+    expect(mock.__state.tables.likes).toEqual([]);
+  });
+
+  it('starts liked when the viewer already liked it', async () => {
+    mock.__state.tables.wallpapers[0] = detailRow('w1', 'u2', {
+      my_like: [{ user_id: ME }],
+    });
+    await open('Quiet Ridge');
+    const button = await likeButton(/^Unlike, 1,284 likes$/);
+    expect(button.props.accessibilityState).toEqual(
+      expect.objectContaining({ selected: true }),
+    );
+  });
+
+  it('rolls back when the server refuses', async () => {
+    mock.__state.onWrite = () => ({
+      data: null,
+      error: { code: '500', message: 'offline' },
+    });
+    await open('Quiet Ridge');
+    await fireEvent.press(await likeButton(/^Like, 1,284 likes$/));
+    expect(await likeButton(/^Like, 1,284 likes$/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Unlike/ })).toBeNull();
+  });
+
+  it('a double tap on the image likes, and never unlikes', async () => {
+    await open('Quiet Ridge');
+    await likeButton(/^Like, 1,284 likes$/);
+    const image = screen.getByTestId('detail-image');
+    await fireEvent.press(image);
+    await fireEvent.press(image);
+    expect(await likeButton(/^Unlike, 1,285 likes$/)).toBeTruthy();
+
+    await fireEvent.press(image);
+    await fireEvent.press(image);
+    expect(await likeButton(/^Unlike, 1,285 likes$/)).toBeTruthy();
+    expect(mock.__state.tables.likes).toHaveLength(1);
+  });
+
+  it('a double tap on my own wallpaper does nothing', async () => {
+    await open('Half Past');
+    await screen.findByText('2,110 likes');
+    const image = screen.getByTestId('detail-image');
+    await fireEvent.press(image);
+    await fireEvent.press(image);
+    expect(screen.getByText('2,110 likes')).toBeTruthy();
+    expect(mock.__state.tables.likes).toBeUndefined();
   });
 });
 

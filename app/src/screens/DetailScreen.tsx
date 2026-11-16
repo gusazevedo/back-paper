@@ -1,7 +1,8 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -20,6 +21,7 @@ import { useCategories } from '../features/categories/useCategories';
 import { showOnlyCategory } from '../features/feed/filter';
 import {
   EDIT_WINDOW_MS,
+  useToggleLike,
   useWallpaper,
   WallpaperDetail,
 } from '../features/wallpaper/queries';
@@ -43,6 +45,15 @@ export function DetailScreen({ navigation, route }: Props) {
   const me = auth.status === 'signed-in' ? auth.session.user.id : null;
   const wallpaper = useWallpaper(id);
   const w = wallpaper.data;
+  const like = useToggleLike(id, me ?? '');
+  const canLike = !!w && !!me && w.author_id !== me;
+  const heart = useHeartBurst();
+  const onImageTap = useDoubleTap(() => {
+    if (!canLike) return;
+    heart.play();
+    // R-LIKE: a double tap only ever likes; unliking is the button's job.
+    if (!w.liked_by_me) like.mutate(true);
+  });
 
   const thumb = w?.thumb_key ?? thumbKey;
   const missing = wallpaper.isError && isNotFound(wallpaper.error);
@@ -67,7 +78,12 @@ export function DetailScreen({ navigation, route }: Props) {
       </View>
 
       <View style={styles.imageArea}>
-        <View style={styles.frame}>
+        <Pressable
+          onPress={onImageTap}
+          accessible={false}
+          style={styles.frame}
+          testID="detail-image"
+        >
           {thumb ? (
             <FastImage
               accessibilityIgnoresInvertColors
@@ -91,13 +107,25 @@ export function DetailScreen({ navigation, route }: Props) {
               objectFit="cover"
             />
           ) : null}
-        </View>
+          <Animated.View
+            pointerEvents="none"
+            style={[styles.burst, heart.style]}
+          >
+            <Icon
+              name="heart"
+              size={96}
+              color={colors.textOnDark}
+              fill={colors.textOnDark}
+            />
+          </Animated.View>
+        </Pressable>
       </View>
 
       {w ? (
         <Info
           wallpaper={w}
           mine={w.author_id === me}
+          onToggleLike={() => like.mutate(!w.liked_by_me)}
           onPickCategory={slug => {
             showOnlyCategory(slug);
             navigation.navigate('Tabs', { screen: 'Feed' });
@@ -136,10 +164,12 @@ export function DetailScreen({ navigation, route }: Props) {
 function Info({
   wallpaper: w,
   mine,
+  onToggleLike,
   onPickCategory,
 }: {
   wallpaper: WallpaperDetail;
   mine: boolean;
+  onToggleLike: () => void;
   onPickCategory: (slug: string) => void;
 }) {
   const categories = useCategories();
@@ -211,14 +241,23 @@ function Info({
             <Button
               variant="secondary"
               label={likes}
-              accessibilityLabel={
+              selected={w.liked_by_me}
+              onPress={onToggleLike}
+              accessibilityLabel={`${
+                w.liked_by_me ? t('detail.unlike') : t('detail.like')
+              }, ${
                 w.like_count === 1
-                  ? `${t('detail.like')}, ${t('detail.likesOne')}`
-                  : `${t('detail.like')}, ${t('detail.likesMany', {
-                      count: likes,
-                    })}`
+                  ? t('detail.likesOne')
+                  : t('detail.likesMany', { count: likes })
+              }`}
+              leading={
+                <Icon
+                  name="heart"
+                  size={20}
+                  color={w.liked_by_me ? colors.like : colors.text}
+                  fill={w.liked_by_me ? colors.like : 'none'}
+                />
               }
-              leading={<Icon name="heart" size={20} />}
             />
             <Button
               variant="secondary"
@@ -264,6 +303,58 @@ function ReportButton() {
       <Text style={styles.reportLabel}>{t('detail.report')}</Text>
     </Pressable>
   );
+}
+
+/** Calls `onDoubleTap` when two taps land within 300 ms. */
+function useDoubleTap(onDoubleTap: () => void) {
+  const last = useRef(0);
+  return () => {
+    const now = Date.now();
+    if (now - last.current < 300) {
+      last.current = 0;
+      onDoubleTap();
+    } else {
+      last.current = now;
+    }
+  };
+}
+
+/** A white heart that pops over the image when a double tap likes it. */
+function useHeartBurst() {
+  const progress = useRef(new Animated.Value(0)).current;
+  useEffect(() => () => progress.stopAnimation(), [progress]);
+  return {
+    play: () => {
+      progress.setValue(0);
+      Animated.sequence([
+        Animated.spring(progress, {
+          toValue: 1,
+          friction: 4,
+          useNativeDriver: true,
+        }),
+        Animated.timing(progress, {
+          toValue: 2,
+          duration: 250,
+          delay: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    },
+    style: {
+      opacity: progress.interpolate({
+        inputRange: [0, 0.2, 1, 2],
+        outputRange: [0, 1, 1, 0],
+      }),
+      transform: [
+        {
+          scale: progress.interpolate({
+            inputRange: [0, 1, 2],
+            outputRange: [0.4, 1, 1.1],
+          }),
+        },
+      ],
+    },
+  };
 }
 
 /** PostgREST answers `.single()` on zero rows with PGRST116. */
@@ -339,6 +430,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   grow: { flex: 1, minWidth: 0 },
+  burst: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   message: { paddingHorizontal: spacing.xl, gap: spacing.xs },
   retry: { marginTop: spacing.md },
   loading: { height: 120, alignItems: 'center', justifyContent: 'center' },

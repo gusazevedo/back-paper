@@ -16,6 +16,14 @@ export function createSupabaseMock() {
     /** Rows an RPC returns, or a handler `(args) => Result` for args-dependent answers or errors. */
     rpc: {} as Record<string, unknown>,
     functions: {} as Record<string, (body: unknown) => Result>,
+    /** Answers an insert or delete before it touches `tables` (e.g. to make it fail). */
+    onWrite: null as
+      | null
+      | ((
+          table: string,
+          op: 'insert' | 'delete',
+          values: unknown,
+        ) => Result | void),
   };
 
   const emit = (next: unknown) => {
@@ -27,7 +35,23 @@ export function createSupabaseMock() {
     const filters: [string, unknown][] = [];
     let single = false;
     let headCount = false;
+    let write: { op: 'insert' | 'delete'; values?: unknown } | null = null;
+    const matches = (row: unknown) =>
+      filters.every(
+        ([col, val]) => (row as Record<string, unknown>)[col] === val,
+      );
+    const runWrite = (op: 'insert' | 'delete', values: unknown): Result => {
+      const answer = state.onWrite?.(table, op, values ?? filters);
+      if (answer) return answer;
+      const rows = state.tables[table] ?? [];
+      state.tables[table] =
+        op === 'insert'
+          ? [...rows, ...(Array.isArray(values) ? values : [values])]
+          : rows.filter(row => !matches(row));
+      return { data: null, error: null };
+    };
     const run = (): Result => {
+      if (write) return runWrite(write.op, write.values);
       const rows = (state.tables[table] ?? []).filter(row =>
         filters.every(
           ([col, val]) => (row as Record<string, unknown>)[col] === val,
@@ -50,6 +74,14 @@ export function createSupabaseMock() {
         return builder;
       },
       order: () => builder,
+      insert: (values: unknown) => {
+        write = { op: 'insert', values };
+        return builder;
+      },
+      delete: () => {
+        write = { op: 'delete' };
+        return builder;
+      },
       single: () => {
         single = true;
         return builder;

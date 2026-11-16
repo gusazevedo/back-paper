@@ -36,6 +36,7 @@ const row = (n: number, author = 'u2') => ({
   width: 1080,
   height: 2340,
   like_count: 0,
+  liked_by_me: false,
   created_at: `2026-11-${String(n).padStart(2, '0')}T00:00:00Z`,
 });
 
@@ -221,6 +222,7 @@ describe('sort and categories', () => {
         original_key: 'w/w2/original.jpg',
         author: { display_name: 'Yuki', avatar_url: null },
         wallpaper_categories: [{ category_slug: 'dark' }],
+        my_like: [],
       },
     ];
     await render(<App />);
