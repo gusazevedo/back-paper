@@ -155,6 +155,13 @@ export const en = {
       another: 'Publish another',
     },
   },
+  edit: {
+    title: 'Edit wallpaper',
+    body: "You can change the title and categories for 24 hours after publishing. The image can't be changed.",
+    save: 'Save changes',
+    failed: "Couldn't save the changes. Try again.",
+    closed: 'The 24 hours for editing are over.',
+  },
   folders: {
     loading: 'Loading folders',
     new: 'New folder',
