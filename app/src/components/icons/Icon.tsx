@@ -21,13 +21,19 @@ export type IconName =
   | 'check'
   | 'replace'
   | 'alert'
-  | 'clock';
+  | 'clock'
+  | 'flag'
+  | 'heart'
+  | 'bookmark'
+  | 'download';
 
 type Props = {
   name: IconName;
   size?: number;
   color?: string;
   strokeWidth?: number;
+  /** Fills closed shapes (a liked heart, a saved bookmark). */
+  fill?: string;
 };
 
 export function Icon({
@@ -35,13 +41,14 @@ export function Icon({
   size = 24,
   color = colors.text,
   strokeWidth = 2,
+  fill = 'none',
 }: Props) {
   const stroke = {
     stroke: color,
     strokeWidth,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
-    fill: 'none',
+    fill,
   };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
@@ -144,5 +151,20 @@ function renderPaths(
           <Path d="M12 7v5l3 2" {...s} />
         </>
       );
+    case 'flag':
+      return <Path d="M5 21V4M5 4h12l-2.5 4.5L17 13H5" {...s} />;
+    case 'heart':
+      return (
+        <Path
+          d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"
+          {...s}
+        />
+      );
+    case 'bookmark':
+      return (
+        <Path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z" {...s} />
+      );
+    case 'download':
+      return <Path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14" {...s} />;
   }
 }

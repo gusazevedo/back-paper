@@ -2,6 +2,7 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '../auth/AuthProvider';
+import { DetailScreen } from '../screens/DetailScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PublishScreen } from '../screens/PublishScreen';
 import { colors } from '../theme';
@@ -11,6 +12,8 @@ export type RootStackParamList = {
   Login: undefined;
   Tabs: NavigatorScreenParams<RootTabParamList>;
   Publish: undefined;
+  /** `thumbKey` lets the screen show the thumbnail before the wallpaper loads. */
+  Detail: { id: string; thumbKey?: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -38,6 +41,12 @@ export function RootStack() {
               presentation: 'fullScreenModal',
               animation: 'slide_from_bottom',
             }}
+          />
+          {/* Above the tabs, so closing it returns to the grid at the same scroll position. */}
+          <Stack.Screen
+            name="Detail"
+            component={DetailScreen}
+            options={{ animation: 'fade_from_bottom', gestureEnabled: false }}
           />
         </>
       ) : (

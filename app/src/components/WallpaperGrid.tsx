@@ -9,7 +9,7 @@ export type GridItem = { id: string; title: string | null; thumb_key: string };
 
 type Props = {
   items: GridItem[];
-  onPressItem?: (id: string) => void;
+  onPressItem?: (item: GridItem) => void;
   onEndReached?: () => void;
   header?: ReactElement;
   empty?: ReactElement;
@@ -54,7 +54,7 @@ export function WallpaperGrid({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={item.title ?? undefined}
-            onPress={() => onPressItem?.(item.id)}
+            onPress={() => onPressItem?.(item)}
             style={styles.tile}
           >
             {/* Thumb keys are immutable (w/{id}/thumb.webp), so FastImage's default immutable cache fits. */}
