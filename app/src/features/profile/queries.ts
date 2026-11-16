@@ -1,4 +1,5 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { KeysetCursor, nextCursor } from '../../lib/keyset';
 import { queryKeys } from '../../lib/queryClient';
 import { supabase } from '../../lib/supabase';
 
@@ -52,7 +53,7 @@ export function useWallpaperCount(userId: string) {
 export function useUserWallpapers(userId: string) {
   return useInfiniteQuery({
     queryKey: queryKeys.userWallpapers(userId),
-    initialPageParam: null as { created_at: string; id: string } | null,
+    initialPageParam: null as KeysetCursor | null,
     queryFn: async ({ pageParam }): Promise<GridWallpaper[]> => {
       const { data, error } = await supabase.rpc('user_wallpapers', {
         p_user_id: userId,
@@ -62,12 +63,6 @@ export function useUserWallpapers(userId: string) {
       if (error) throw error;
       return data as GridWallpaper[];
     },
-    getNextPageParam: last =>
-      last.length < PAGE
-        ? undefined
-        : {
-            created_at: last[last.length - 1].created_at,
-            id: last[last.length - 1].id,
-          },
+    getNextPageParam: last => nextCursor(last, PAGE),
   });
 }

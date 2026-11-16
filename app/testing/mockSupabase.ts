@@ -13,6 +13,7 @@ export function createSupabaseMock() {
   const state = {
     session: null as unknown,
     tables: {} as Record<string, unknown[]>,
+    /** Rows an RPC returns, or a handler `(args) => Result` for args-dependent answers or errors. */
     rpc: {} as Record<string, unknown>,
     functions: {} as Record<string, (body: unknown) => Result>,
   };
@@ -82,10 +83,12 @@ export function createSupabaseMock() {
       }),
     },
     from: jest.fn(from),
-    rpc: jest.fn(async (name: string) => ({
-      data: state.rpc[name] ?? [],
-      error: null,
-    })),
+    rpc: jest.fn(async (name: string, args?: unknown): Promise<Result> => {
+      const entry = state.rpc[name];
+      return typeof entry === 'function'
+        ? entry(args)
+        : { data: entry ?? [], error: null };
+    }),
     functions: {
       invoke: jest.fn(async (name: string, opts: { body: unknown }) => {
         const handler = state.functions[name];

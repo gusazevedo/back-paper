@@ -128,6 +128,7 @@ export function PublishScreen() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.userWallpaperCount(userId),
       });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feed });
       setPick(null);
       setTitle('');
       setSelected([]);

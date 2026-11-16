@@ -11,6 +11,18 @@ export const en = {
   },
   feed: {
     title: 'BackPaper',
+    loading: 'Loading wallpapers',
+    loadingMore: 'Loading more wallpapers',
+    loadMoreFailed: "Couldn't load more. Try again",
+    retry: 'Try again',
+    empty: {
+      title: 'No wallpapers yet',
+      body: 'Be the first to publish one with the + button.',
+    },
+    error: {
+      title: "Couldn't load the feed",
+      body: 'Check your connection and try again.',
+    },
   },
   publish: {
     title: 'Publish',
