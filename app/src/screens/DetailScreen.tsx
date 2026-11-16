@@ -25,9 +25,11 @@ import { showOnlyCategory } from '../features/feed/filter';
 import { useWallpaperFolders } from '../features/folders/queries';
 import { SaveSheet } from '../features/folders/SaveSheet';
 import { EditSheet } from '../features/wallpaper/EditSheet';
+import { ReportSheet } from '../features/wallpaper/ReportSheet';
 import {
   EDIT_WINDOW_MS,
   useDeleteWallpaper,
+  useReportWallpaper,
   useToggleLike,
   useWallpaper,
   WallpaperDetail,
@@ -53,6 +55,8 @@ export function DetailScreen({ navigation, route }: Props) {
   const wallpaper = useWallpaper(id);
   const w = wallpaper.data;
   const like = useToggleLike(id, me ?? '');
+  const report = useReportWallpaper(id, me ?? '');
+  const [reportOpen, setReportOpen] = useState(false);
   const canLike = !!w && !!me && w.author_id !== me;
   const heart = useHeartBurst();
   const onImageTap = useDoubleTap(() => {
@@ -81,7 +85,9 @@ export function DetailScreen({ navigation, route }: Props) {
           accessibilityLabel={t('common.close')}
           onPress={() => navigation.goBack()}
         />
-        {w && w.author_id !== me ? <ReportButton /> : null}
+        {w && w.author_id !== me ? (
+          <ReportButton onPress={() => setReportOpen(true)} />
+        ) : null}
       </View>
 
       <View style={styles.imageArea}>
@@ -165,6 +171,23 @@ export function DetailScreen({ navigation, route }: Props) {
           />
         </View>
       )}
+      <ReportSheet
+        visible={reportOpen}
+        busy={report.isPending}
+        onCancel={() => setReportOpen(false)}
+        onReport={reason =>
+          report.mutate(reason, {
+            onSuccess: () => {
+              setReportOpen(false);
+              ToastAndroid.show(t('report.done'), ToastAndroid.SHORT);
+              // R-REP-3: it is gone for the reporter, so leave the detail.
+              navigation.goBack();
+            },
+            onError: () =>
+              ToastAndroid.show(t('report.failed'), ToastAndroid.LONG),
+          })
+        }
+      />
     </View>
   );
 }
@@ -378,10 +401,11 @@ function Info({
   );
 }
 
-function ReportButton() {
+function ReportButton({ onPress }: { onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
+      onPress={onPress}
       style={({ pressed }) => [styles.report, pressed && styles.pressed]}
     >
       <Icon name="flag" size={18} color={colors.textMuted} />

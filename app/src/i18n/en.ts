@@ -160,6 +160,22 @@ export const en = {
       another: 'Publish another',
     },
   },
+  report: {
+    title: 'Report this wallpaper?',
+    body: 'It will stop appearing in your feed. A wallpaper reported by 3 people is deleted for everyone.',
+    reason: 'Reason',
+    confirm: 'Report',
+    done: "Reported. You won't see this wallpaper again.",
+    failed: "Couldn't send the report. Try again.",
+    reasons: {
+      nudity_sexual: 'Nudity or sexual content',
+      violence_gore: 'Violence or gore',
+      hate_harassment: 'Hate or harassment',
+      copyright: 'Copyright infringement',
+      spam_low_quality: 'Spam or low quality',
+      other: 'Something else',
+    },
+  },
   edit: {
     title: 'Edit wallpaper',
     body: "You can change the title and categories for 24 hours after publishing. The image can't be changed.",
