@@ -171,3 +171,41 @@ export function useDeleteWallpaper(id: string) {
     },
   });
 }
+
+export const REPORT_REASONS = [
+  'nudity_sexual',
+  'violence_gore',
+  'hate_harassment',
+  'copyright',
+  'spam_low_quality',
+  'other',
+] as const;
+
+export type ReportReason = (typeof REPORT_REASONS)[number];
+
+/**
+ * R-REP-1..3: reports someone else's wallpaper with a fixed reason. From then
+ * on the server hides it from the reporter everywhere, so every grid refetches.
+ */
+export function useReportWallpaper(id: string, userId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (reason: ReportReason) => {
+      const { error } = await supabase
+        .from('reports')
+        .insert({ reporter_id: userId, wallpaper_id: id, reason });
+      // Already reported (e.g. from another device): the outcome is the same.
+      if (error && error.code !== '23505') throw error;
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: queryKeys.wallpaper(id) });
+      for (const prefix of [
+        queryKeys.feed,
+        ['user-wallpapers'],
+        queryKeys.folders,
+      ]) {
+        queryClient.invalidateQueries({ queryKey: prefix });
+      }
+    },
+  });
+}
