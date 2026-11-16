@@ -145,3 +145,29 @@ export function useUpdateWallpaper(id: string) {
     },
   });
 }
+
+/**
+ * R-DEL-1: the author deletes for good. RLS lets only the author through; the
+ * database cascades to categories, likes and everyone's folders, and queues the
+ * objects for removal from storage.
+ */
+export function useDeleteWallpaper(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('wallpapers').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: queryKeys.wallpaper(id) });
+      for (const prefix of [
+        queryKeys.feed,
+        ['user-wallpapers'],
+        ['user-wallpaper-count'],
+        queryKeys.folders,
+      ]) {
+        queryClient.invalidateQueries({ queryKey: prefix });
+      }
+    },
+  });
+}
