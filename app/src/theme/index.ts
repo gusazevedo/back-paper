@@ -9,6 +9,8 @@ export const colors = {
   placeholder: '#E6E6E1',
   text: '#161614',
   textMuted: '#5E5E59',
+  /** Body copy inside tinted panels (limit reached, rejected image). */
+  textSecondary: '#4A4A45',
   textOnDark: '#FFFFFF',
   primary: '#161614',
   border: '#DCDCD6',
@@ -19,6 +21,10 @@ export const colors = {
   dangerSoft: '#D43D22',
   dangerSurface: '#FBEEEA',
   dangerText: '#8C1D18',
+  dangerBorder: '#E8B3A6',
+  /** Disabled buttons sitting on a surfaceMuted panel. */
+  disabledOnMuted: '#D9D9D3',
+  disabledBorderOnMuted: '#CFCFC8',
   hairline: '#E2E2DD',
   track: '#DCDCD6',
   overlay: 'rgba(22, 22, 20, 0.4)',

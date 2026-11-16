@@ -23,6 +23,8 @@ Single-context: one `GLOSSARY.md` + `docs/adr/` at the repo root. See `docs/agen
 - Every migration that adds a table or policy gets pgTAP coverage in `supabase/tests` (RLS included).
 - App config lives in `app/src/config/env.ts` (public values only: Supabase URL, anon key, Google Web client ID, storage public URL). Defaults point at the local stack on `127.0.0.1:54321`; on the emulator run `adb reverse tcp:54321 tcp:54321` (presigned upload URLs are signed for that host). Google provider secrets for the local stack go in `supabase/.env` (see `supabase/.env.example`).
 - Edge Functions (`supabase/functions`, Deno): copy `supabase/functions/.env.example` to `.env` before `npm run db:start`. Locally the Supabase Storage S3 endpoint (bucket `wallpapers`) stands in for Cloudflare R2; object storage is only reached through `_shared/storage.ts`. Unit tests: `npm run fn:test`.
+- Upload rules (R-PUB-3 to R-PUB-6) live twice and must stay in sync: `app/src/features/publish/imageRules.ts` (client, with specific messages) and `supabase/functions/_shared/uploads.ts` (server re-check). The 10-per-24h limit is enforced in SQL (`publish_quota`, `create_wallpaper` raises `BP429`).
+- Production R2 needs the `pending/` expiry rule once per bucket: `R2_BUCKET=<name> infra/r2/apply-lifecycle.sh` (the local Storage stand-in has no lifecycle rules).
 - Debug builds without a Google client ID show a "Dev sign-in" button that signs in a local email/password user (`app/src/auth/devSignIn.ts`). Never ship it enabled.
 - App tests mock Supabase with `app/testing/mockSupabase.ts` (auth, table queries, RPCs, functions).
 - New migration: `npx supabase migration new <name> </dev/null` (the command reads SQL from stdin and hangs without the redirect).

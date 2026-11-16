@@ -4,7 +4,9 @@ import App from '../src/App';
 jest.mock('../src/lib/supabase', () => {
   const mock = require('../testing/mockSupabase').createSupabaseMock();
   mock.__setSession({ access_token: 'jwt', user: { id: 'u1' } });
-  mock.__state.tables.profiles = [{ id: 'u1', display_name: 'Maya', avatar_url: null }];
+  mock.__state.tables.profiles = [
+    { id: 'u1', display_name: 'Maya', avatar_url: null },
+  ];
   return { supabase: mock };
 });
 jest.mock('@react-native-google-signin/google-signin', () => ({}));

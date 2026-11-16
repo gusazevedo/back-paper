@@ -5,6 +5,7 @@ import {
   waitFor,
 } from '@testing-library/react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { encodeAs } from '../testing/resizer';
 import App from '../src/App';
 import { queryClient } from '../src/lib/queryClient';
 import { supabase } from '../src/lib/supabase';
@@ -39,7 +40,11 @@ beforeEach(() => {
     ],
     wallpapers: [],
   };
-  mock.__state.rpc = { user_wallpapers: [] };
+  mock.__state.rpc = {
+    user_wallpapers: [],
+    my_publish_quota: [{ lim: 10, used: 0, remaining: 10, next_at: null }],
+  };
+  encodeAs({ width: 1080, height: 2340, size: 2_000_000 });
   mock.__state.functions = {
     'request-upload': () => ({
       data: {

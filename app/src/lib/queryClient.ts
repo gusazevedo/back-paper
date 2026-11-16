@@ -12,4 +12,5 @@ export const queryKeys = {
   userWallpapers: (userId: string) => ['user-wallpapers', userId] as const,
   userWallpaperCount: (userId: string) =>
     ['user-wallpaper-count', userId] as const,
+  publishQuota: (userId: string) => ['publish-quota', userId] as const,
 };
