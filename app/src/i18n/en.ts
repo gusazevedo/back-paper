@@ -230,6 +230,23 @@ export const en = {
     save: 'Save',
     saveFailed: "Couldn't save your name. Try again.",
     logOut: 'Log out',
+    deleteAccount: 'Delete account',
+  },
+  deleteAccount: {
+    title: 'Delete account',
+    intro:
+      "Deleting your account happens right away and can't be undone. This is permanently deleted:",
+    items: {
+      wallpapers:
+        "Every wallpaper you published. They also disappear from other people's folders.",
+      likes: 'Your likes',
+      folders: 'Your folders',
+      reports: 'Your reports',
+    },
+    after: "Afterwards you'll be taken back to the sign-in screen.",
+    confirmLabel: 'Type {word} to confirm',
+    confirm: 'Delete account',
+    failed: "Couldn't delete your account. Try again.",
   },
   publicProfile: {
     empty: "They haven't published any wallpapers yet.",

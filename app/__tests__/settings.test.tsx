@@ -144,3 +144,73 @@ describe('settings', () => {
     ).toBeTruthy();
   });
 });
+
+describe('delete account', () => {
+  const openDeleteAccount = async () => {
+    await openSettings();
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Delete account' }),
+    );
+    await screen.findByRole('header', { name: 'Delete account' });
+  };
+
+  it('explains what is deleted and unlocks only with exactly DELETE', async () => {
+    await openDeleteAccount();
+    expect(
+      screen.getByText(
+        "Every wallpaper you published. They also disappear from other people's folders.",
+      ),
+    ).toBeTruthy();
+    const field = screen.getByLabelText('Type DELETE to confirm');
+    const button = screen.getAllByRole('button', { name: 'Delete account' })[0];
+    expect(button).toBeDisabled();
+    await fireEvent.changeText(field, 'delete');
+    expect(button).toBeDisabled();
+    await fireEvent.changeText(field, 'DELETE ');
+    expect(button).toBeDisabled();
+    await fireEvent.changeText(field, 'DELETE');
+    expect(button).not.toBeDisabled();
+  });
+
+  it('deletes through the Edge Function, signs out and returns to login', async () => {
+    mock.__state.functions['delete-account'] = () => ({
+      data: { deleted: true },
+      error: null,
+    });
+    await openDeleteAccount();
+    await fireEvent.changeText(
+      screen.getByLabelText('Type DELETE to confirm'),
+      'DELETE',
+    );
+    await fireEvent.press(
+      screen.getAllByRole('button', { name: 'Delete account' })[0],
+    );
+    expect(
+      await screen.findByRole('button', { name: /Continue with Google/ }),
+    ).toBeTruthy();
+    expect(mock.functions.invoke).toHaveBeenCalledWith('delete-account', {
+      body: {},
+    });
+    // The user no longer exists on the server: only the local session goes.
+    expect(mock.auth.signOut).toHaveBeenCalledWith({ scope: 'local' });
+  });
+
+  it('stays and says so when the deletion fails', async () => {
+    mock.__state.functions['delete-account'] = () => ({
+      data: null,
+      error: new Error('down'),
+    });
+    await openDeleteAccount();
+    await fireEvent.changeText(
+      screen.getByLabelText('Type DELETE to confirm'),
+      'DELETE',
+    );
+    await fireEvent.press(
+      screen.getAllByRole('button', { name: 'Delete account' })[0],
+    );
+    expect(
+      await screen.findByText("Couldn't delete your account. Try again."),
+    ).toBeTruthy();
+    expect(mock.auth.signOut).not.toHaveBeenCalled();
+  });
+});
