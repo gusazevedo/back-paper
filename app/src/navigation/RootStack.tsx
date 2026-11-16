@@ -7,6 +7,7 @@ import { FolderScreen } from '../screens/FolderScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PublicProfileScreen } from '../screens/PublicProfileScreen';
 import { PublishScreen } from '../screens/PublishScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 import { colors } from '../theme';
 import { RootTabParamList, RootTabs } from './RootTabs';
 
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   Folder: { id: string; name?: string };
   /** `name` shows in the header before the profile loads. */
   PublicProfile: { userId: string; name?: string };
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -56,6 +58,7 @@ export function RootStack() {
           />
           <Stack.Screen name="Folder" component={FolderScreen} />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
         </>
       ) : (
         <Stack.Screen

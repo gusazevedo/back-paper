@@ -4,14 +4,11 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../auth/AuthProvider';
-import { signOut } from '../auth/google';
 import { Avatar } from '../components/Avatar';
 import { IconButton } from '../components/IconButton';
-import { Sheet } from '../components/Sheet';
 import { Button } from '../components/Button';
 import { Icon } from '../components/icons/Icon';
 import { SegmentedControl } from '../components/SegmentedControl';
-import { SheetOption } from '../components/SheetOption';
 import { WallpaperGrid } from '../components/WallpaperGrid';
 import { FolderGrid } from '../features/folders/FolderGrid';
 import { NameSheet } from '../components/NameSheet';
@@ -36,7 +33,7 @@ type Section = 'published' | 'folders';
 
 /**
  * My profile: header, then the Published grid or my private Folders (R-FOLD-1).
- * Folders are created here or from the Save sheet. Settings arrives with #16.
+ * Folders are created here or from the Save sheet; the gear opens Settings.
  */
 export function ProfileScreen() {
   const auth = useAuth();
@@ -47,7 +44,6 @@ export function ProfileScreen() {
   const profile = useProfile(userId);
   const count = useWallpaperCount(userId);
   const wallpapers = useUserWallpapers(userId);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [section, setSection] = useState<Section>('published');
   const folders = useFolders(section === 'folders');
   const [naming, setNaming] = useState(false);
@@ -79,7 +75,7 @@ export function ProfileScreen() {
         <IconButton
           icon="settings"
           accessibilityLabel={t('profile.settings')}
-          onPress={() => setMenuOpen(true)}
+          onPress={() => navigation.navigate('Settings')}
         />
       </View>
       <View style={styles.sections}>
@@ -190,16 +186,6 @@ export function ProfileScreen() {
         }
         onCancel={() => setNaming(false)}
       />
-      <Sheet visible={menuOpen} onDismiss={() => setMenuOpen(false)} compact>
-        <SheetOption
-          icon="back"
-          label={t('profile.logOut')}
-          onPress={async () => {
-            setMenuOpen(false);
-            await signOut();
-          }}
-        />
-      </Sheet>
     </View>
   );
 }
