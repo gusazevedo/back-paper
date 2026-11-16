@@ -34,6 +34,7 @@ export function createSupabaseMock() {
   const from = (table: string) => {
     const filters: [string, unknown][] = [];
     let single = false;
+    let inserted: unknown[] = [];
     let headCount = false;
     let write: { op: 'insert' | 'delete'; values?: unknown } | null = null;
     const matches = (row: unknown) =>
@@ -44,10 +45,15 @@ export function createSupabaseMock() {
       const answer = state.onWrite?.(table, op, values ?? filters);
       if (answer) return answer;
       const rows = state.tables[table] ?? [];
-      state.tables[table] =
-        op === 'insert'
-          ? [...rows, ...(Array.isArray(values) ? values : [values])]
-          : rows.filter(row => !matches(row));
+      if (op === 'insert') {
+        // `.insert(...).select().single()` reads back a generated id, as Postgres would.
+        inserted = (Array.isArray(values) ? values : [values]).map(v =>
+          single ? { id: `${table}-${rows.length + 1}`, ...(v as object) } : v,
+        );
+        state.tables[table] = [...rows, ...inserted];
+        return { data: single ? inserted[0] : null, error: null };
+      }
+      state.tables[table] = rows.filter(row => !matches(row));
       return { data: null, error: null };
     };
     const run = (): Result => {
