@@ -14,7 +14,14 @@ import { SegmentedControl } from '../components/SegmentedControl';
 import { SheetOption } from '../components/SheetOption';
 import { WallpaperGrid } from '../components/WallpaperGrid';
 import { FolderGrid } from '../features/folders/FolderGrid';
-import { useFolders } from '../features/folders/queries';
+import { NameSheet } from '../components/NameSheet';
+import {
+  FOLDER_NAME_MAX,
+  FolderNameTakenError,
+  folderNameProblem,
+  useCreateFolder,
+  useFolders,
+} from '../features/folders/queries';
 import {
   useProfile,
   useUserWallpapers,
@@ -29,7 +36,7 @@ type Section = 'published' | 'folders';
 
 /**
  * My profile: header, then the Published grid or my private Folders (R-FOLD-1).
- * Managing folders arrives with #11, Settings with #16.
+ * Folders are created here or from the Save sheet. Settings arrives with #16.
  */
 export function ProfileScreen() {
   const auth = useAuth();
@@ -43,6 +50,8 @@ export function ProfileScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [section, setSection] = useState<Section>('published');
   const folders = useFolders(section === 'folders');
+  const [naming, setNaming] = useState(false);
+  const create = useCreateFolder(userId);
 
   const items = wallpapers.data?.pages.flat() ?? [];
   const total = count.data ?? 0;
@@ -106,8 +115,12 @@ export function ProfileScreen() {
           bottomInset={bottomInset}
           refreshing={folders.isRefetching}
           onRefresh={() => folders.refetch()}
-          empty={
-            folders.isPending ? undefined : folders.isError ? (
+          onNewFolder={() => {
+            create.reset();
+            setNaming(true);
+          }}
+          footer={
+            folders.isError ? (
               <View accessibilityRole="alert" style={styles.emptyBox}>
                 <Text style={[typography.bodySmall, styles.emptyText]}>
                   {t('folders.error')}
@@ -118,11 +131,7 @@ export function ProfileScreen() {
                   onPress={() => folders.refetch()}
                 />
               </View>
-            ) : (
-              <Text style={[typography.bodySmall, styles.empty]}>
-                {t('folders.emptyList')}
-              </Text>
-            )
+            ) : null
           }
         />
       ) : (
@@ -154,6 +163,33 @@ export function ProfileScreen() {
           }
         />
       )}
+      <NameSheet
+        visible={naming}
+        heading={t('folders.new')}
+        label={t('folders.nameLabel')}
+        cta={t('folders.create')}
+        maxLength={FOLDER_NAME_MAX}
+        validate={value =>
+          folderNameProblem(
+            value,
+            (folders.data ?? []).map(f => f.name),
+          ) === 'taken'
+            ? t('folders.nameTaken')
+            : null
+        }
+        serverError={
+          create.error instanceof FolderNameTakenError
+            ? t('folders.nameTaken')
+            : create.error
+            ? t('folders.createFailed')
+            : null
+        }
+        busy={create.isPending}
+        onSubmit={value =>
+          create.mutate(value, { onSuccess: () => setNaming(false) })
+        }
+        onCancel={() => setNaming(false)}
+      />
       <Sheet visible={menuOpen} onDismiss={() => setMenuOpen(false)} compact>
         <SheetOption
           icon="back"

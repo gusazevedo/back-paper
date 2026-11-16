@@ -4,12 +4,16 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { publicUrl } from '../lib/storage';
 import { colors, radii, spacing } from '../theme';
+import { Icon } from './icons/Icon';
 
 export type GridItem = { id: string; title: string | null; thumb_key: string };
 
 type Props = {
   items: GridItem[];
   onPressItem?: (item: GridItem) => void;
+  /** Adds an × in the corner of each tile (removing from a folder). */
+  onRemoveItem?: (item: GridItem) => void;
+  removeLabel?: (item: GridItem) => string;
   onEndReached?: () => void;
   header?: ReactElement;
   empty?: ReactElement;
@@ -25,6 +29,8 @@ const GAP = spacing.sm;
 export function WallpaperGrid({
   items,
   onPressItem,
+  onRemoveItem,
+  removeLabel,
   onEndReached,
   header,
   empty,
@@ -64,6 +70,18 @@ export function WallpaperGrid({
               objectFit="cover"
             />
           </Pressable>
+          {onRemoveItem ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={removeLabel?.(item)}
+              onPress={() => onRemoveItem(item)}
+              style={styles.remove}
+            >
+              <View style={styles.removeBadge}>
+                <Icon name="close" size={14} strokeWidth={2.5} />
+              </View>
+            </Pressable>
+          ) : null}
         </View>
       )}
     />
@@ -79,4 +97,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.placeholder,
   },
   image: { width: '100%', height: '100%' },
+  // 44×44 touch target in the tile's top-right corner around a 28px badge.
+  remove: {
+    position: 'absolute',
+    top: 0,
+    right: GAP / 2,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.hairline,
+    elevation: 3,
+  },
 });
