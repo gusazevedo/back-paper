@@ -1,5 +1,5 @@
 begin;
-select plan(11);
+select plan(12);
 
 -- Ignore whatever the local database holds; everything is rolled back at the end.
 delete from auth.users;
@@ -56,6 +56,13 @@ select throws_ok(
 select throws_ok(
   $$update public.profiles set display_name = repeat('x', 41) where id = '00000000-0000-0000-0000-000000000001'$$,
   '23514', null, 'a display name has at most 40 characters');
+
+-- No name and no email: the app's name stands in.
+reset role;
+insert into auth.users (id) values ('00000000-0000-0000-0000-000000000003');
+select is(
+  (select display_name from public.profiles where id = '00000000-0000-0000-0000-000000000003'),
+  'BackPapers user', 'a nameless account gets a default name');
 
 select * from finish();
 rollback;

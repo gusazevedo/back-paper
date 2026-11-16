@@ -10,7 +10,7 @@ export const en = {
     profile: 'Profile',
   },
   feed: {
-    title: 'BackPaper',
+    title: 'BackPapers',
     loading: 'Loading wallpapers',
     loadingMore: 'Loading more wallpapers',
     loadMoreFailed: "Couldn't load more. Try again",
@@ -71,7 +71,7 @@ export const en = {
     download: 'Download',
     downloading: 'Saving…',
     downloadedLabel: 'Downloaded',
-    downloaded: 'Saved to the BackPaper album',
+    downloaded: 'Saved to the BackPapers album',
     downloadFailed: "Couldn't save the wallpaper. Try again.",
     downloadNoPermission: 'Allow storage access to save wallpapers.',
     edit: 'Edit',
@@ -263,7 +263,7 @@ export const en = {
     emptyPublished: "You haven't published any wallpapers yet.",
   },
   login: {
-    title: 'BackPaper',
+    title: 'BackPapers',
     tagline:
       'A shared gallery of phone wallpapers to browse, like, save and download.',
     continueWithGoogle: 'Continue with Google',

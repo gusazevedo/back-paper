@@ -1,4 +1,4 @@
-# BackPaper — Especificação (MVP)
+# BackPapers — Especificação (MVP)
 
 > App Android de compartilhamento de papéis de parede para celular, alimentado pelos próprios usuários.
 > Documento gerado a partir de sessão de grilling em 2026-11-14. Layout visual fora de escopo (virá do Claude Design); aqui as telas são descritas por **conteúdo e comportamento**.
@@ -33,7 +33,7 @@
 | Item | Decisão |
 |---|---|
 | App | React Native CLI (sem Expo), TypeScript, **somente Android**, `minSdk 24` |
-| Package id / nome | `com.gustavo.backpaper.app` / "BackPaper" |
+| Package id / nome | `com.gustavo.backpaper.app` / "BackPapers" |
 | Idioma | Inglês (strings isoladas em arquivo i18n para futura escolha de idioma) |
 | Tema | Somente light |
 | Backend | Supabase: Postgres, Auth (Google), Edge Functions (Deno) |
@@ -48,7 +48,7 @@
 - Redimensionar / remover EXIF: **@bam.tech/react-native-image-resizer**.
 - Exibição com cache: **@d11/react-native-fast-image**.
 - Grade: **@shopify/flash-list**.
-- Download: **react-native-blob-util** + **@react-native-camera-roll/camera-roll** (álbum "BackPaper").
+- Download: **react-native-blob-util** + **@react-native-camera-roll/camera-roll** (álbum "BackPapers").
 
 ---
 
@@ -61,7 +61,7 @@
 | **Curtir** | Marcar um wallpaper de outro usuário como curtido. Alimenta "Most liked". |
 | **Salvar** | Adicionar um wallpaper de outro usuário a uma **pasta**. Não existe "salvo" fora de pasta. |
 | **Pasta (Folder)** | Coleção nomeada, privada e pessoal de wallpapers salvos. Sinônimo de "álbum" no app. |
-| **Download** | Baixar o arquivo original para a galeria do aparelho, álbum "BackPaper". |
+| **Download** | Baixar o arquivo original para a galeria do aparelho, álbum "BackPapers". |
 | **Denúncia (Report)** | Sinalização de conteúdo impróprio. 3 denúncias apagam o wallpaper. |
 
 ---
@@ -127,7 +127,7 @@ Ações para **wallpaper próprio**:
 - R-FOLD-7: Bottom sheet de Save: lista as pastas do usuário com check nas que já contêm o wallpaper; tocar alterna (adiciona/remove); item "+ New folder" cria a pasta e já salva o wallpaper nela.
 
 ### 4.7 Download
-- R-DL-1: Baixa o **arquivo original** para a galeria do aparelho, no álbum **"BackPaper"**.
+- R-DL-1: Baixa o **arquivo original** para a galeria do aparelho, no álbum **"BackPapers"**.
 - R-DL-2: Android 10+ (API 29+): sem permissão (MediaStore). API 24–28: pedir `WRITE_EXTERNAL_STORAGE`.
 - R-DL-3: Feedback de sucesso ou erro via toast/snackbar.
 
