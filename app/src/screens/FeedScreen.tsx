@@ -1,3 +1,5 @@
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../components/Button';
@@ -7,15 +9,17 @@ import { t } from '../i18n';
 import { queryKeys } from '../lib/queryClient';
 import { useRefreshFromStart } from '../lib/useRefreshFromStart';
 import { BOTTOM_NAV_CLEARANCE } from '../navigation/BottomNav';
+import type { RootStackParamList } from '../navigation/RootStack';
 import { colors, spacing, typography } from '../theme';
 
 /**
  * Public feed: 2-column grid of thumbnails, newest first, infinite scroll and
- * pull-to-refresh (R-FEED-1, -2, -4, -5). Sort and category filter arrive with #7,
- * the detail screen with #6.
+ * pull-to-refresh (R-FEED-1, -2, -4, -5). Sort and category filter arrive with #7.
  */
 export function FeedScreen() {
   const insets = useSafeAreaInsets();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const feed = useFeed();
   const { refreshing, refresh } = useRefreshFromStart(queryKeys.feed);
   const items = feed.data?.pages.flat() ?? [];
@@ -54,6 +58,12 @@ export function FeedScreen() {
     body = (
       <WallpaperGrid
         items={items}
+        onPressItem={item =>
+          navigation.navigate('Detail', {
+            id: item.id,
+            thumbKey: item.thumb_key,
+          })
+        }
         bottomInset={bottomInset}
         refreshing={refreshing}
         onRefresh={refresh}

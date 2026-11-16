@@ -1,3 +1,5 @@
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +17,7 @@ import {
 } from '../features/profile/queries';
 import { t } from '../i18n';
 import { BOTTOM_NAV_CLEARANCE } from '../navigation/BottomNav';
+import type { RootStackParamList } from '../navigation/RootStack';
 import { colors, spacing, typography } from '../theme';
 
 /** My profile: header + Published grid. Folders arrive with #11, Settings with #16. */
@@ -22,6 +25,8 @@ export function ProfileScreen() {
   const auth = useAuth();
   const userId = auth.status === 'signed-in' ? auth.session.user.id : '';
   const insets = useSafeAreaInsets();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const profile = useProfile(userId);
   const count = useWallpaperCount(userId);
   const wallpapers = useUserWallpapers(userId);
@@ -35,6 +40,12 @@ export function ProfileScreen() {
     <View style={styles.root}>
       <WallpaperGrid
         items={items}
+        onPressItem={item =>
+          navigation.navigate('Detail', {
+            id: item.id,
+            thumbKey: item.thumb_key,
+          })
+        }
         bottomInset={BOTTOM_NAV_CLEARANCE + insets.bottom}
         onEndReached={() =>
           wallpapers.hasNextPage && wallpapers.fetchNextPage()

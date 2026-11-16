@@ -46,7 +46,7 @@ type Phase =
   | { kind: 'form' }
   | { kind: 'sending'; progress: number }
   | { kind: 'failed' }
-  | { kind: 'done'; thumbKey: string };
+  | { kind: 'done'; id: string; thumbKey: string };
 
 type Pick =
   | { kind: 'good'; image: PickedImage }
@@ -132,7 +132,7 @@ export function PublishScreen() {
       setPick(null);
       setTitle('');
       setSelected([]);
-      setPhase({ kind: 'done', thumbKey: result.thumb_key });
+      setPhase({ kind: 'done', id: result.id, thumbKey: result.thumb_key });
     } catch (e) {
       // Out of publishes: the refreshed quota swaps the form for the limit panel.
       const limited =
@@ -194,7 +194,13 @@ export function PublishScreen() {
           <View style={styles.fullWidth}>
             <Button
               label={t('publish.done.view')}
-              onPress={() => navigation.navigate('Tabs', { screen: 'Profile' })}
+              onPress={() =>
+                // Replace the modal so closing the detail lands back on the tabs.
+                navigation.replace('Detail', {
+                  id: phase.id,
+                  thumbKey: phase.thumbKey,
+                })
+              }
             />
             {left !== 0 ? (
               <>

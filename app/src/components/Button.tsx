@@ -7,6 +7,8 @@ export type ButtonVariant =
   | 'secondary'
   | 'danger'
   | 'dangerSoft'
+  /** Outlined with red text: Delete next to other outlined actions. */
+  | 'dangerOutline'
   /** Text-only, 44 px tall: Cancel and other low-emphasis actions. */
   | 'ghost';
 
@@ -19,6 +21,8 @@ type Props = {
   size?: 'md' | 'lg';
   leading?: ReactNode;
   testID?: string;
+  /** Spoken label when the visible one is not enough (e.g. a bare like count). */
+  accessibilityLabel?: string;
 };
 
 const palette: Record<
@@ -29,6 +33,11 @@ const palette: Record<
   secondary: { bg: colors.surface, fg: colors.text, border: colors.border },
   danger: { bg: colors.danger, fg: colors.textOnDark },
   dangerSoft: { bg: colors.dangerSoft, fg: colors.textOnDark },
+  dangerOutline: {
+    bg: colors.surface,
+    fg: colors.danger,
+    border: colors.border,
+  },
   ghost: { bg: 'transparent', fg: colors.text },
 };
 
@@ -40,6 +49,7 @@ export function Button({
   size = 'md',
   leading,
   testID,
+  accessibilityLabel,
 }: Props) {
   const ghost = variant === 'ghost';
   const p = disabled
@@ -49,6 +59,7 @@ export function Button({
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
